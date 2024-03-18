@@ -1,0 +1,8 @@
+prefix=/home/jeppe/consensus_formation_flying/ros_ws/install
+
+Name: joy_reader
+Description: Description of joy_reader
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 

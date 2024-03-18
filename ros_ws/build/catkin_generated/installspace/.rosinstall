@@ -1,0 +1,2 @@
+- setup-file:
+    local-name: /home/jeppe/consensus_formation_flying/ros_ws/install/setup.sh

@@ -1,0 +1,8 @@
+prefix=/home/jeppe/consensus_formation_flying/ros_ws/install
+
+Name: formation_control
+Description: Description of formation_control
+Version: 0.0.0
+Cflags: -I/usr/include/eigen3
+Libs: -L${prefix}/lib 
+Requires: 

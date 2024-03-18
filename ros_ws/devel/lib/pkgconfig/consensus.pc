@@ -1,0 +1,8 @@
+prefix=/home/jeppe/consensus_formation_flying/ros_ws/devel
+
+Name: consensus
+Description: Description of consensus
+Version: 0.0.0
+Cflags: -I/usr/include/eigen3
+Libs: -L${prefix}/lib 
+Requires: 
