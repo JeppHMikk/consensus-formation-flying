@@ -27,7 +27,7 @@ using namespace Eigen;
 
 const int N = 4; // number of robots
 const float clearance = 2;
-const float max_vel = 5.0;
+const float max_vel = 10.0;
 const float rho_0 = 2.0;
 const float rho_1 = 5.0;
 const float b = max_vel + 1.0;
@@ -62,13 +62,12 @@ const char* uavName = std::getenv("UAV_NAME"); // load UAV_NAME environment vari
 std::string uavNameString(uavName); // convert uavName to a string
 int uavNum = uavNameString[3] - '0'; // extract uav number
 
-int ros_rate = 1000; // ROS rate
-float ts = 1.0/float(ros_rate); // sampling time
+int ros_rate = 10; // ROS rate
+float ts = 1e-2; //1.0/float(ros_rate); // sampling time
 
 float alpha = 0.25; // Exponential moving average filter coefficient
 
 float Kv = 0.25;
-
 
 // Subscriber callback for getting joypad values
 void joyCallback(const std_msgs::Int32MultiArray::ConstPtr& msg)
@@ -337,9 +336,9 @@ int main(int argc, char **argv)
   R90 << 0, -1, 1, 0;
 
   // Initialise obstacle positions
-  c_obst.col(0) << 10, 12;
+  c_obst.col(0) << 10, 20;
   r_obst(0,0) = 2;
-  c_obst.col(1) << -10, 12;
+  c_obst.col(1) << -10, 20;
   r_obst(1,0) = 2;
 
   // Initialize base configuration
@@ -430,26 +429,26 @@ int main(int argc, char **argv)
   while (ros::ok())
   {
 
-    /*
-    float cp = 0.0;
-    for(int i=0; i<N; i++){
-      if(i != uavNum-1){
-        float cpi = colProb(p.col(uavNum-1), p.col(i), Sigma[uavNum-1].block(0,0,2,2), Sigma[i].block(0,0,2,2));
-        if(cpi > cp){
-          cp = cpi;
-        }
+    float m_soft = 1.5; // soft constraint allowed standard deviations
+    float m_hard = 2.3263; // hard constraint allowed standard deviations
+
+    // Generate soft scaling constraint
+    Eigen::Matrix <float, 3, 2> A_soft;
+    Eigen::Matrix <float, 3, 1> b_soft;
+    int iter = 0;
+    for(int i=0; i<4; i++){
+      if(i != (uavNum-1)){
+        auto const_ij = genConst(eta.block(1,0,2,1), Sigma[i].block(0,0,2,2), Sigma[uavNum-1].block(0,0,2,2), C.block(0,i,2,1), C.block(0,uavNum-1,2,1), m_soft);
+        A_soft.row(iter) << get<0>(const_ij).transpose();
+        b_soft(iter,0) = get<1>(const_ij);
+        iter += 1;
       }
     }
-    cout << to_string(100*cp) << endl;
-    */
-
-    float m_soft = 1; // soft constraint allowed standard deviations
-    float m_hard = 2.3263; //2.3263; // hard constraint allowed standard deviations
 
     // Generate hard scaling constraint
     Eigen::Matrix <float, 3, 2> A_hard;
     Eigen::Matrix <float, 3, 1> b_hard;
-    int iter = 0;
+    iter = 0;
     for(int i=0; i<4; i++){
       if(i != (uavNum-1)){
         auto const_ij = genConst(eta.block(1,0,2,1), Sigma[i].block(0,0,2,2), Sigma[uavNum-1].block(0,0,2,2), C.block(0,i,2,1), C.block(0,uavNum-1,2,1), m_hard);
@@ -460,12 +459,12 @@ int main(int argc, char **argv)
     }
 
     // Publish obstacle markers
-    marker.pose.position.x = 10;
-    marker.pose.position.y = 10;
+    marker.pose.position.x = c_obst(0,0);
+    marker.pose.position.y = c_obst(1,0);
     marker.pose.position.z = 5;
     marker_pub1.publish(marker);
-    marker.pose.position.x = -10;
-    marker.pose.position.y = 10;
+    marker.pose.position.x = c_obst(0,1);
+    marker.pose.position.y = c_obst(1,1);
     marker.pose.position.z = 5;
     marker_pub2.publish(marker);
 
@@ -475,16 +474,23 @@ int main(int argc, char **argv)
     // Consensus step
     deta_N.setZero();
     for(int i=0; i<N-1; i++){
-      deta_N = deta_N + 10*(eta_N.block(0,i,5,1) - eta);
+      deta_N = deta_N + 1*(eta_N.block(0,i,5,1) - eta);
+    }
+
+    // Perform soft projection step
+    MatrixXf s_proj_soft = projScale(eta.block(1,0,2,1), A_soft, b_soft);
+    MatrixXf deta_soft = Eigen::MatrixXf::Zero(5,1);
+    if((!isnan(s_proj_soft.array())).all()){
+      deta_soft.block(1,0,2,1) = 0.2*(s_proj_soft - eta.block(1,0,2,1));
     }
 
     // Calculate parameter derivative
-    deta = deta_joy + 5*deta_N + deta_rep;
+    deta = deta_joy + 5*deta_N + deta_rep + deta_soft;
 
-    // Perform projection step
-    MatrixXf s_proj = projScale(eta.block(1,0,2,1)+deta.block(1,0,2,1), A_hard, b_hard);
-    if((!isnan(s_proj.array())).all()){
-      deta.block(1,0,2,1) = s_proj - eta.block(1,0,2,1);
+    // Perform hard projection step
+    MatrixXf s_proj_hard = projScale(eta.block(1,0,2,1)+deta.block(1,0,2,1), A_hard, b_hard);
+    if((!isnan(s_proj_hard.array())).all()){
+      deta.block(1,0,2,1) = s_proj_hard - eta.block(1,0,2,1);
     }
 
     // Calculate reference position and velocity
@@ -512,7 +518,7 @@ int main(int argc, char **argv)
     //vel_msg.reference.velocity.x = vr(0,0); 
     //vel_msg.reference.velocity.y = vr(1,0);
     //vel_msg.reference.velocity.z = vr(2,0);
-    //el_ref_pub.publish(vel_msg);
+    //vel_ref_pub.publish(vel_msg);
 
     ros::spinOnce();
 
