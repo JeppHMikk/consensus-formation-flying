@@ -43,10 +43,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/jeppe/consensus_formation_flying/ros_ws/src
+CMAKE_SOURCE_DIR = /home/jeppe/consensus-formation-flying/ros_ws/src
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/jeppe/consensus_formation_flying/ros_ws/build
+CMAKE_BINARY_DIR = /home/jeppe/consensus-formation-flying/ros_ws/build
 
 # Include any dependencies generated for this target.
 include joy_reader/CMakeFiles/joy_reader.dir/depend.make
@@ -58,17 +58,17 @@ include joy_reader/CMakeFiles/joy_reader.dir/progress.make
 include joy_reader/CMakeFiles/joy_reader.dir/flags.make
 
 joy_reader/CMakeFiles/joy_reader.dir/src/joy_reader.cpp.o: joy_reader/CMakeFiles/joy_reader.dir/flags.make
-joy_reader/CMakeFiles/joy_reader.dir/src/joy_reader.cpp.o: /home/jeppe/consensus_formation_flying/ros_ws/src/joy_reader/src/joy_reader.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/jeppe/consensus_formation_flying/ros_ws/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object joy_reader/CMakeFiles/joy_reader.dir/src/joy_reader.cpp.o"
-	cd /home/jeppe/consensus_formation_flying/ros_ws/build/joy_reader && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/joy_reader.dir/src/joy_reader.cpp.o -c /home/jeppe/consensus_formation_flying/ros_ws/src/joy_reader/src/joy_reader.cpp
+joy_reader/CMakeFiles/joy_reader.dir/src/joy_reader.cpp.o: /home/jeppe/consensus-formation-flying/ros_ws/src/joy_reader/src/joy_reader.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/jeppe/consensus-formation-flying/ros_ws/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object joy_reader/CMakeFiles/joy_reader.dir/src/joy_reader.cpp.o"
+	cd /home/jeppe/consensus-formation-flying/ros_ws/build/joy_reader && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/joy_reader.dir/src/joy_reader.cpp.o -c /home/jeppe/consensus-formation-flying/ros_ws/src/joy_reader/src/joy_reader.cpp
 
 joy_reader/CMakeFiles/joy_reader.dir/src/joy_reader.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/joy_reader.dir/src/joy_reader.cpp.i"
-	cd /home/jeppe/consensus_formation_flying/ros_ws/build/joy_reader && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/jeppe/consensus_formation_flying/ros_ws/src/joy_reader/src/joy_reader.cpp > CMakeFiles/joy_reader.dir/src/joy_reader.cpp.i
+	cd /home/jeppe/consensus-formation-flying/ros_ws/build/joy_reader && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/jeppe/consensus-formation-flying/ros_ws/src/joy_reader/src/joy_reader.cpp > CMakeFiles/joy_reader.dir/src/joy_reader.cpp.i
 
 joy_reader/CMakeFiles/joy_reader.dir/src/joy_reader.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/joy_reader.dir/src/joy_reader.cpp.s"
-	cd /home/jeppe/consensus_formation_flying/ros_ws/build/joy_reader && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/jeppe/consensus_formation_flying/ros_ws/src/joy_reader/src/joy_reader.cpp -o CMakeFiles/joy_reader.dir/src/joy_reader.cpp.s
+	cd /home/jeppe/consensus-formation-flying/ros_ws/build/joy_reader && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/jeppe/consensus-formation-flying/ros_ws/src/joy_reader/src/joy_reader.cpp -o CMakeFiles/joy_reader.dir/src/joy_reader.cpp.s
 
 # Object files for target joy_reader
 joy_reader_OBJECTS = \
@@ -77,39 +77,39 @@ joy_reader_OBJECTS = \
 # External object files for target joy_reader
 joy_reader_EXTERNAL_OBJECTS =
 
-/home/jeppe/consensus_formation_flying/ros_ws/devel/lib/joy_reader/joy_reader: joy_reader/CMakeFiles/joy_reader.dir/src/joy_reader.cpp.o
-/home/jeppe/consensus_formation_flying/ros_ws/devel/lib/joy_reader/joy_reader: joy_reader/CMakeFiles/joy_reader.dir/build.make
-/home/jeppe/consensus_formation_flying/ros_ws/devel/lib/joy_reader/joy_reader: /opt/ros/noetic/lib/libroscpp.so
-/home/jeppe/consensus_formation_flying/ros_ws/devel/lib/joy_reader/joy_reader: /usr/lib/x86_64-linux-gnu/libpthread.so
-/home/jeppe/consensus_formation_flying/ros_ws/devel/lib/joy_reader/joy_reader: /usr/lib/x86_64-linux-gnu/libboost_chrono.so.1.71.0
-/home/jeppe/consensus_formation_flying/ros_ws/devel/lib/joy_reader/joy_reader: /usr/lib/x86_64-linux-gnu/libboost_filesystem.so.1.71.0
-/home/jeppe/consensus_formation_flying/ros_ws/devel/lib/joy_reader/joy_reader: /opt/ros/noetic/lib/librosconsole.so
-/home/jeppe/consensus_formation_flying/ros_ws/devel/lib/joy_reader/joy_reader: /opt/ros/noetic/lib/librosconsole_log4cxx.so
-/home/jeppe/consensus_formation_flying/ros_ws/devel/lib/joy_reader/joy_reader: /opt/ros/noetic/lib/librosconsole_backend_interface.so
-/home/jeppe/consensus_formation_flying/ros_ws/devel/lib/joy_reader/joy_reader: /usr/lib/x86_64-linux-gnu/liblog4cxx.so
-/home/jeppe/consensus_formation_flying/ros_ws/devel/lib/joy_reader/joy_reader: /usr/lib/x86_64-linux-gnu/libboost_regex.so.1.71.0
-/home/jeppe/consensus_formation_flying/ros_ws/devel/lib/joy_reader/joy_reader: /opt/ros/noetic/lib/libxmlrpcpp.so
-/home/jeppe/consensus_formation_flying/ros_ws/devel/lib/joy_reader/joy_reader: /opt/ros/noetic/lib/libroscpp_serialization.so
-/home/jeppe/consensus_formation_flying/ros_ws/devel/lib/joy_reader/joy_reader: /opt/ros/noetic/lib/librostime.so
-/home/jeppe/consensus_formation_flying/ros_ws/devel/lib/joy_reader/joy_reader: /usr/lib/x86_64-linux-gnu/libboost_date_time.so.1.71.0
-/home/jeppe/consensus_formation_flying/ros_ws/devel/lib/joy_reader/joy_reader: /opt/ros/noetic/lib/libcpp_common.so
-/home/jeppe/consensus_formation_flying/ros_ws/devel/lib/joy_reader/joy_reader: /usr/lib/x86_64-linux-gnu/libboost_system.so.1.71.0
-/home/jeppe/consensus_formation_flying/ros_ws/devel/lib/joy_reader/joy_reader: /usr/lib/x86_64-linux-gnu/libboost_thread.so.1.71.0
-/home/jeppe/consensus_formation_flying/ros_ws/devel/lib/joy_reader/joy_reader: /usr/lib/x86_64-linux-gnu/libconsole_bridge.so.0.4
-/home/jeppe/consensus_formation_flying/ros_ws/devel/lib/joy_reader/joy_reader: joy_reader/CMakeFiles/joy_reader.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/jeppe/consensus_formation_flying/ros_ws/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX executable /home/jeppe/consensus_formation_flying/ros_ws/devel/lib/joy_reader/joy_reader"
-	cd /home/jeppe/consensus_formation_flying/ros_ws/build/joy_reader && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/joy_reader.dir/link.txt --verbose=$(VERBOSE)
+/home/jeppe/consensus-formation-flying/ros_ws/devel/lib/joy_reader/joy_reader: joy_reader/CMakeFiles/joy_reader.dir/src/joy_reader.cpp.o
+/home/jeppe/consensus-formation-flying/ros_ws/devel/lib/joy_reader/joy_reader: joy_reader/CMakeFiles/joy_reader.dir/build.make
+/home/jeppe/consensus-formation-flying/ros_ws/devel/lib/joy_reader/joy_reader: /opt/ros/noetic/lib/libroscpp.so
+/home/jeppe/consensus-formation-flying/ros_ws/devel/lib/joy_reader/joy_reader: /usr/lib/x86_64-linux-gnu/libpthread.so
+/home/jeppe/consensus-formation-flying/ros_ws/devel/lib/joy_reader/joy_reader: /usr/lib/x86_64-linux-gnu/libboost_chrono.so.1.71.0
+/home/jeppe/consensus-formation-flying/ros_ws/devel/lib/joy_reader/joy_reader: /usr/lib/x86_64-linux-gnu/libboost_filesystem.so.1.71.0
+/home/jeppe/consensus-formation-flying/ros_ws/devel/lib/joy_reader/joy_reader: /opt/ros/noetic/lib/librosconsole.so
+/home/jeppe/consensus-formation-flying/ros_ws/devel/lib/joy_reader/joy_reader: /opt/ros/noetic/lib/librosconsole_log4cxx.so
+/home/jeppe/consensus-formation-flying/ros_ws/devel/lib/joy_reader/joy_reader: /opt/ros/noetic/lib/librosconsole_backend_interface.so
+/home/jeppe/consensus-formation-flying/ros_ws/devel/lib/joy_reader/joy_reader: /usr/lib/x86_64-linux-gnu/liblog4cxx.so
+/home/jeppe/consensus-formation-flying/ros_ws/devel/lib/joy_reader/joy_reader: /usr/lib/x86_64-linux-gnu/libboost_regex.so.1.71.0
+/home/jeppe/consensus-formation-flying/ros_ws/devel/lib/joy_reader/joy_reader: /opt/ros/noetic/lib/libxmlrpcpp.so
+/home/jeppe/consensus-formation-flying/ros_ws/devel/lib/joy_reader/joy_reader: /opt/ros/noetic/lib/libroscpp_serialization.so
+/home/jeppe/consensus-formation-flying/ros_ws/devel/lib/joy_reader/joy_reader: /opt/ros/noetic/lib/librostime.so
+/home/jeppe/consensus-formation-flying/ros_ws/devel/lib/joy_reader/joy_reader: /usr/lib/x86_64-linux-gnu/libboost_date_time.so.1.71.0
+/home/jeppe/consensus-formation-flying/ros_ws/devel/lib/joy_reader/joy_reader: /opt/ros/noetic/lib/libcpp_common.so
+/home/jeppe/consensus-formation-flying/ros_ws/devel/lib/joy_reader/joy_reader: /usr/lib/x86_64-linux-gnu/libboost_system.so.1.71.0
+/home/jeppe/consensus-formation-flying/ros_ws/devel/lib/joy_reader/joy_reader: /usr/lib/x86_64-linux-gnu/libboost_thread.so.1.71.0
+/home/jeppe/consensus-formation-flying/ros_ws/devel/lib/joy_reader/joy_reader: /usr/lib/x86_64-linux-gnu/libconsole_bridge.so.0.4
+/home/jeppe/consensus-formation-flying/ros_ws/devel/lib/joy_reader/joy_reader: joy_reader/CMakeFiles/joy_reader.dir/link.txt
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/jeppe/consensus-formation-flying/ros_ws/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX executable /home/jeppe/consensus-formation-flying/ros_ws/devel/lib/joy_reader/joy_reader"
+	cd /home/jeppe/consensus-formation-flying/ros_ws/build/joy_reader && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/joy_reader.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
-joy_reader/CMakeFiles/joy_reader.dir/build: /home/jeppe/consensus_formation_flying/ros_ws/devel/lib/joy_reader/joy_reader
+joy_reader/CMakeFiles/joy_reader.dir/build: /home/jeppe/consensus-formation-flying/ros_ws/devel/lib/joy_reader/joy_reader
 
 .PHONY : joy_reader/CMakeFiles/joy_reader.dir/build
 
 joy_reader/CMakeFiles/joy_reader.dir/clean:
-	cd /home/jeppe/consensus_formation_flying/ros_ws/build/joy_reader && $(CMAKE_COMMAND) -P CMakeFiles/joy_reader.dir/cmake_clean.cmake
+	cd /home/jeppe/consensus-formation-flying/ros_ws/build/joy_reader && $(CMAKE_COMMAND) -P CMakeFiles/joy_reader.dir/cmake_clean.cmake
 .PHONY : joy_reader/CMakeFiles/joy_reader.dir/clean
 
 joy_reader/CMakeFiles/joy_reader.dir/depend:
-	cd /home/jeppe/consensus_formation_flying/ros_ws/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/jeppe/consensus_formation_flying/ros_ws/src /home/jeppe/consensus_formation_flying/ros_ws/src/joy_reader /home/jeppe/consensus_formation_flying/ros_ws/build /home/jeppe/consensus_formation_flying/ros_ws/build/joy_reader /home/jeppe/consensus_formation_flying/ros_ws/build/joy_reader/CMakeFiles/joy_reader.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/jeppe/consensus-formation-flying/ros_ws/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/jeppe/consensus-formation-flying/ros_ws/src /home/jeppe/consensus-formation-flying/ros_ws/src/joy_reader /home/jeppe/consensus-formation-flying/ros_ws/build /home/jeppe/consensus-formation-flying/ros_ws/build/joy_reader /home/jeppe/consensus-formation-flying/ros_ws/build/joy_reader/CMakeFiles/joy_reader.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : joy_reader/CMakeFiles/joy_reader.dir/depend
 

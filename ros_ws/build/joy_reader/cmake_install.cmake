@@ -1,8 +1,8 @@
-# Install script for directory: /home/jeppe/consensus_formation_flying/ros_ws/src/joy_reader
+# Install script for directory: /home/jeppe/consensus-formation-flying/ros_ws/src/joy_reader
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
-  set(CMAKE_INSTALL_PREFIX "/home/jeppe/consensus_formation_flying/ros_ws/install")
+  set(CMAKE_INSTALL_PREFIX "/home/jeppe/consensus-formation-flying/ros_ws/install")
 endif()
 string(REGEX REPLACE "/$" "" CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 
@@ -38,17 +38,17 @@ if(NOT DEFINED CMAKE_CROSSCOMPILING)
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig" TYPE FILE FILES "/home/jeppe/consensus_formation_flying/ros_ws/build/joy_reader/catkin_generated/installspace/joy_reader.pc")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig" TYPE FILE FILES "/home/jeppe/consensus-formation-flying/ros_ws/build/joy_reader/catkin_generated/installspace/joy_reader.pc")
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
   file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/joy_reader/cmake" TYPE FILE FILES
-    "/home/jeppe/consensus_formation_flying/ros_ws/build/joy_reader/catkin_generated/installspace/joy_readerConfig.cmake"
-    "/home/jeppe/consensus_formation_flying/ros_ws/build/joy_reader/catkin_generated/installspace/joy_readerConfig-version.cmake"
+    "/home/jeppe/consensus-formation-flying/ros_ws/build/joy_reader/catkin_generated/installspace/joy_readerConfig.cmake"
+    "/home/jeppe/consensus-formation-flying/ros_ws/build/joy_reader/catkin_generated/installspace/joy_readerConfig-version.cmake"
     )
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/joy_reader" TYPE FILE FILES "/home/jeppe/consensus_formation_flying/ros_ws/src/joy_reader/package.xml")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/joy_reader" TYPE FILE FILES "/home/jeppe/consensus-formation-flying/ros_ws/src/joy_reader/package.xml")
 endif()
 

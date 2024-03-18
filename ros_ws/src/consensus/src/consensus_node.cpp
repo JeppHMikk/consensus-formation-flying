@@ -22,12 +22,11 @@
 #include <functional>
 #include <boost/bind.hpp>
 
-
 using namespace std;
 using namespace Eigen;
 
 const int N = 4; // number of robots
-const float clearance = 4;
+const float clearance = 2;
 const float max_vel = 5.0;
 const float rho_0 = 2.0;
 const float rho_1 = 5.0;
@@ -77,8 +76,8 @@ void joyCallback(const std_msgs::Int32MultiArray::ConstPtr& msg)
   deta_joy << 1*(float(msg->data[4])/32767.0 - float(msg->data[5])/32767.0),
               2*float(msg->data[0])/32767.0,
               -2*float(msg->data[1])/32767.0,
-              1.5*float(msg->data[2])/32767.0,
-              -1.5*float(msg->data[3])/32767.0;
+              2.5*float(msg->data[2])/32767.0,
+              -2.5*float(msg->data[3])/32767.0;
 }
 
 void etaCallback(int id, const std_msgs::Float32MultiArray::ConstPtr& msg){
@@ -252,112 +251,54 @@ Eigen::MatrixXf projScale(Eigen::MatrixXf s, Eigen::MatrixXf A, Eigen::MatrixXf 
     return s;
   }
   else{
+
+    cout << to_string(time(NULL)) + ", projecting" << endl;
+
     // Find the most violated constraint
     auto tmp = smEl(A*s-b);
     int i = get<1>(tmp);
-    float alpha = (b.row(i)-A.row(i)*s).value()/(A.row(i)*A.row(i).transpose()).value();
-    s = s + alpha*A.row(i).transpose();
-    //Check if new point is feasible
-    if(((A*s).array() >= b.array()).all()){
-      return s;
-    }
-    // Find second most violated constraint
-    else{
-      auto tmp = smEl(A*s-b);
-      int j = get<1>(tmp);
-      MatrixXf ai = R90*(A.row(i).transpose());
-      MatrixXf aj = A.row(j).transpose();
-      MatrixXf bj = b.row(j);
-      float alpha = (bj-aj.transpose()*s).value()/(aj.transpose()*ai).value();
-      s = s + alpha*ai;
-      if(((A*s).array() >= b.array()).all()){
-        return s;
-      }
-    }
-  }
+    //float alpha = (b.row(i)-A.row(i)*s).value()/(A.row(i)*A.row(i).transpose()).value();
+    //s = s + alpha*A.row(i).transpose();
 
-
-  /*
-  // Check if current scaling is feasible
-  if(((A*s).array() >= b.array()).all()){
-    return s;
-  }
-  // If it is not feasible. Use an active-set method to find closest feasible point
-  else{
-    // Find most violated constraint and project scaling onto that
-    auto tmp = smEl(A*s-b);
-    int i = get<1>(tmp);
-    float alpha = (b.row(i)-A.row(i)*s).value()/(A.row(i)*A.row(i).transpose()).value();
-    s = s + alpha*A.row(i).transpose();
-    // Use constraint that is projected onto as initial active set
     MatrixXf Aw = A.row(i);
     MatrixXf bw = b.row(i);
 
     int iter = 0;
-    int iter_max = 10;
 
-    while(iter < iter_max){
-      iter = iter + 1;
+    while(iter < 100){
 
-      // Solve optimisation step with active set
+      iter++;
+
       int M = Aw.rows();
       // Build KKT matrix
       Eigen::MatrixXf K(2+M,2+M);
       K << Eigen::MatrixXf::Identity(2,2), Aw.transpose(),
           Aw, Eigen::MatrixXf::Zero(M,M);
       Eigen::MatrixXf t(2+M,1);
-      t << (s0 - s), Eigen::MatrixXf::Zero(M,1);
+      t << (s0 - s), bw;
       // Solve LCQP problem
       MatrixXf sol = K.completeOrthogonalDecomposition().pseudoInverse()*t;
       // Extract optimal solution and Lagrange multipliers
       MatrixXf ds_opt = sol.block(0,0,2,1);
       MatrixXf lambda_opt = sol.block(2,0,M,1);
 
-      s = s + ds_opt;
-
-      if(isnan(lambda_opt.array()).any()){
-        cout << K << endl;
-        cout << Aw << endl;
-        cout << ds_opt << endl;
-        cout << lambda_opt << endl;
-        cout << iter << endl;
-        cout << "-----------------";
+      if(((A*(s + ds_opt)).array() < b.array() - 0.0001).any()){
+        // If solution is infeasible, add most violated constraint
+        auto tmp = smEl(A*s-b);
+        int i = get<1>(tmp);
+        Aw.conservativeResize(Aw.rows()+1,Eigen::NoChange);
+        Aw.row(Aw.rows()-1) = A.row(i);
+        bw.conservativeResize(bw.rows()+1,Eigen::NoChange);
+        bw.row(bw.rows()-1) = b.row(i);
       }
-
-      // Check if new point is not feasible
-      if(((A*s).array() < b.array() - 0.0001).any()){
-        //cout << "projection is infeasible" << endl;
-        float alpha = 1.0;
-        int min_id = -1;
-        for(int i=0; i<A.rows(); i++){
-          float alpha_i = ((b.row(i)-A.row(i)*s).value()/(A.row(i)*ds_opt).value());
-          if(alpha_i < alpha){
-            alpha = alpha_i;
-            min_id = i;
-          }
-        }
-        if(min_id >= 0){
-          // Project onto constraint and include it in active set
-          s = s + alpha*ds_opt;
-          Aw.conservativeResize(Aw.rows()+1,Eigen::NoChange);
-          Aw.row(Aw.rows()-1) = A.row(i);
-          bw.conservativeResize(bw.rows()+1,Eigen::NoChange);
-          bw.row(bw.rows()-1) = b.row(i);
-        }
-      }
-      // If point is feasible
       else
       {
         // If all Lagrange multipliers are negative, the optimiser is done
         if((lambda_opt.array() <= 0).all()){
-          //cout << "scaling projected" << endl;
-          return s;
+          return s + ds_opt;
         }
         // If there is a positive Lagrange multiplier, remove the constraint associated with the smallest one
         else{
-          //cout << "--------------" << endl;
-          //cout << lambda_opt << endl;
-          //cout << "constraint removed" << endl;
           // Find the smallest Lagrange multiplier and its index
           auto tmp = smEl(lambda_opt);
           int r = get<1>(tmp);
@@ -386,9 +327,7 @@ Eigen::MatrixXf projScale(Eigen::MatrixXf s, Eigen::MatrixXf A, Eigen::MatrixXf 
     }
   }
 
-  */
-
-  return s;
+  return s0;
 
 }
 
@@ -398,9 +337,9 @@ int main(int argc, char **argv)
   R90 << 0, -1, 1, 0;
 
   // Initialise obstacle positions
-  c_obst.col(0) << 10, 10;
+  c_obst.col(0) << 10, 12;
   r_obst(0,0) = 2;
-  c_obst.col(1) << -10, 10;
+  c_obst.col(1) << -10, 12;
   r_obst(1,0) = 2;
 
   // Initialize base configuration
@@ -505,7 +444,7 @@ int main(int argc, char **argv)
     */
 
     float m_soft = 1; // soft constraint allowed standard deviations
-    float m_hard = 4; //2.3263; // hard constraint allowed standard deviations
+    float m_hard = 2.3263; //2.3263; // hard constraint allowed standard deviations
 
     // Generate hard scaling constraint
     Eigen::Matrix <float, 3, 2> A_hard;
@@ -536,7 +475,7 @@ int main(int argc, char **argv)
     // Consensus step
     deta_N.setZero();
     for(int i=0; i<N-1; i++){
-      deta_N = deta_N + (eta_N.block(0,i,5,1) - eta);
+      deta_N = deta_N + 10*(eta_N.block(0,i,5,1) - eta);
     }
 
     // Calculate parameter derivative
@@ -569,11 +508,11 @@ int main(int argc, char **argv)
     pos_ref_pub.publish(pos_msg);
 
     // Publish velocity reference
-    mrs_msgs::VelocityReferenceStamped vel_msg;
-    vel_msg.reference.velocity.x = vr(0,0); 
-    vel_msg.reference.velocity.y = vr(1,0);
-    vel_msg.reference.velocity.z = vr(2,0);
-    vel_ref_pub.publish(vel_msg);
+    //mrs_msgs::VelocityReferenceStamped vel_msg;
+    //vel_msg.reference.velocity.x = vr(0,0); 
+    //vel_msg.reference.velocity.y = vr(1,0);
+    //vel_msg.reference.velocity.z = vr(2,0);
+    //el_ref_pub.publish(vel_msg);
 
     ros::spinOnce();
 

@@ -43,10 +43,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/jeppe/consensus_formation_flying/ros_ws/src
+CMAKE_SOURCE_DIR = /home/jeppe/consensus-formation-flying/ros_ws/src
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/jeppe/consensus_formation_flying/ros_ws/build
+CMAKE_BINARY_DIR = /home/jeppe/consensus-formation-flying/ros_ws/build
 
 # Include any dependencies generated for this target.
 include consensus/CMakeFiles/consensus.dir/depend.make
@@ -58,17 +58,17 @@ include consensus/CMakeFiles/consensus.dir/progress.make
 include consensus/CMakeFiles/consensus.dir/flags.make
 
 consensus/CMakeFiles/consensus.dir/src/consensus_node.cpp.o: consensus/CMakeFiles/consensus.dir/flags.make
-consensus/CMakeFiles/consensus.dir/src/consensus_node.cpp.o: /home/jeppe/consensus_formation_flying/ros_ws/src/consensus/src/consensus_node.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/jeppe/consensus_formation_flying/ros_ws/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object consensus/CMakeFiles/consensus.dir/src/consensus_node.cpp.o"
-	cd /home/jeppe/consensus_formation_flying/ros_ws/build/consensus && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/consensus.dir/src/consensus_node.cpp.o -c /home/jeppe/consensus_formation_flying/ros_ws/src/consensus/src/consensus_node.cpp
+consensus/CMakeFiles/consensus.dir/src/consensus_node.cpp.o: /home/jeppe/consensus-formation-flying/ros_ws/src/consensus/src/consensus_node.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/jeppe/consensus-formation-flying/ros_ws/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object consensus/CMakeFiles/consensus.dir/src/consensus_node.cpp.o"
+	cd /home/jeppe/consensus-formation-flying/ros_ws/build/consensus && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/consensus.dir/src/consensus_node.cpp.o -c /home/jeppe/consensus-formation-flying/ros_ws/src/consensus/src/consensus_node.cpp
 
 consensus/CMakeFiles/consensus.dir/src/consensus_node.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/consensus.dir/src/consensus_node.cpp.i"
-	cd /home/jeppe/consensus_formation_flying/ros_ws/build/consensus && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/jeppe/consensus_formation_flying/ros_ws/src/consensus/src/consensus_node.cpp > CMakeFiles/consensus.dir/src/consensus_node.cpp.i
+	cd /home/jeppe/consensus-formation-flying/ros_ws/build/consensus && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/jeppe/consensus-formation-flying/ros_ws/src/consensus/src/consensus_node.cpp > CMakeFiles/consensus.dir/src/consensus_node.cpp.i
 
 consensus/CMakeFiles/consensus.dir/src/consensus_node.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/consensus.dir/src/consensus_node.cpp.s"
-	cd /home/jeppe/consensus_formation_flying/ros_ws/build/consensus && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/jeppe/consensus_formation_flying/ros_ws/src/consensus/src/consensus_node.cpp -o CMakeFiles/consensus.dir/src/consensus_node.cpp.s
+	cd /home/jeppe/consensus-formation-flying/ros_ws/build/consensus && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/jeppe/consensus-formation-flying/ros_ws/src/consensus/src/consensus_node.cpp -o CMakeFiles/consensus.dir/src/consensus_node.cpp.s
 
 # Object files for target consensus
 consensus_OBJECTS = \
@@ -77,40 +77,40 @@ consensus_OBJECTS = \
 # External object files for target consensus
 consensus_EXTERNAL_OBJECTS =
 
-/home/jeppe/consensus_formation_flying/ros_ws/devel/lib/consensus/consensus: consensus/CMakeFiles/consensus.dir/src/consensus_node.cpp.o
-/home/jeppe/consensus_formation_flying/ros_ws/devel/lib/consensus/consensus: consensus/CMakeFiles/consensus.dir/build.make
-/home/jeppe/consensus_formation_flying/ros_ws/devel/lib/consensus/consensus: /opt/ros/noetic/lib/libMrsMsgs_Main.so
-/home/jeppe/consensus_formation_flying/ros_ws/devel/lib/consensus/consensus: /opt/ros/noetic/lib/libroscpp.so
-/home/jeppe/consensus_formation_flying/ros_ws/devel/lib/consensus/consensus: /usr/lib/x86_64-linux-gnu/libpthread.so
-/home/jeppe/consensus_formation_flying/ros_ws/devel/lib/consensus/consensus: /usr/lib/x86_64-linux-gnu/libboost_chrono.so.1.71.0
-/home/jeppe/consensus_formation_flying/ros_ws/devel/lib/consensus/consensus: /usr/lib/x86_64-linux-gnu/libboost_filesystem.so.1.71.0
-/home/jeppe/consensus_formation_flying/ros_ws/devel/lib/consensus/consensus: /opt/ros/noetic/lib/librosconsole.so
-/home/jeppe/consensus_formation_flying/ros_ws/devel/lib/consensus/consensus: /opt/ros/noetic/lib/librosconsole_log4cxx.so
-/home/jeppe/consensus_formation_flying/ros_ws/devel/lib/consensus/consensus: /opt/ros/noetic/lib/librosconsole_backend_interface.so
-/home/jeppe/consensus_formation_flying/ros_ws/devel/lib/consensus/consensus: /usr/lib/x86_64-linux-gnu/liblog4cxx.so
-/home/jeppe/consensus_formation_flying/ros_ws/devel/lib/consensus/consensus: /usr/lib/x86_64-linux-gnu/libboost_regex.so.1.71.0
-/home/jeppe/consensus_formation_flying/ros_ws/devel/lib/consensus/consensus: /opt/ros/noetic/lib/libroscpp_serialization.so
-/home/jeppe/consensus_formation_flying/ros_ws/devel/lib/consensus/consensus: /opt/ros/noetic/lib/libxmlrpcpp.so
-/home/jeppe/consensus_formation_flying/ros_ws/devel/lib/consensus/consensus: /opt/ros/noetic/lib/librostime.so
-/home/jeppe/consensus_formation_flying/ros_ws/devel/lib/consensus/consensus: /usr/lib/x86_64-linux-gnu/libboost_date_time.so.1.71.0
-/home/jeppe/consensus_formation_flying/ros_ws/devel/lib/consensus/consensus: /opt/ros/noetic/lib/libcpp_common.so
-/home/jeppe/consensus_formation_flying/ros_ws/devel/lib/consensus/consensus: /usr/lib/x86_64-linux-gnu/libboost_system.so.1.71.0
-/home/jeppe/consensus_formation_flying/ros_ws/devel/lib/consensus/consensus: /usr/lib/x86_64-linux-gnu/libboost_thread.so.1.71.0
-/home/jeppe/consensus_formation_flying/ros_ws/devel/lib/consensus/consensus: /usr/lib/x86_64-linux-gnu/libconsole_bridge.so.0.4
-/home/jeppe/consensus_formation_flying/ros_ws/devel/lib/consensus/consensus: consensus/CMakeFiles/consensus.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/jeppe/consensus_formation_flying/ros_ws/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX executable /home/jeppe/consensus_formation_flying/ros_ws/devel/lib/consensus/consensus"
-	cd /home/jeppe/consensus_formation_flying/ros_ws/build/consensus && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/consensus.dir/link.txt --verbose=$(VERBOSE)
+/home/jeppe/consensus-formation-flying/ros_ws/devel/lib/consensus/consensus: consensus/CMakeFiles/consensus.dir/src/consensus_node.cpp.o
+/home/jeppe/consensus-formation-flying/ros_ws/devel/lib/consensus/consensus: consensus/CMakeFiles/consensus.dir/build.make
+/home/jeppe/consensus-formation-flying/ros_ws/devel/lib/consensus/consensus: /opt/ros/noetic/lib/libMrsMsgs_Main.so
+/home/jeppe/consensus-formation-flying/ros_ws/devel/lib/consensus/consensus: /opt/ros/noetic/lib/libroscpp.so
+/home/jeppe/consensus-formation-flying/ros_ws/devel/lib/consensus/consensus: /usr/lib/x86_64-linux-gnu/libpthread.so
+/home/jeppe/consensus-formation-flying/ros_ws/devel/lib/consensus/consensus: /usr/lib/x86_64-linux-gnu/libboost_chrono.so.1.71.0
+/home/jeppe/consensus-formation-flying/ros_ws/devel/lib/consensus/consensus: /usr/lib/x86_64-linux-gnu/libboost_filesystem.so.1.71.0
+/home/jeppe/consensus-formation-flying/ros_ws/devel/lib/consensus/consensus: /opt/ros/noetic/lib/librosconsole.so
+/home/jeppe/consensus-formation-flying/ros_ws/devel/lib/consensus/consensus: /opt/ros/noetic/lib/librosconsole_log4cxx.so
+/home/jeppe/consensus-formation-flying/ros_ws/devel/lib/consensus/consensus: /opt/ros/noetic/lib/librosconsole_backend_interface.so
+/home/jeppe/consensus-formation-flying/ros_ws/devel/lib/consensus/consensus: /usr/lib/x86_64-linux-gnu/liblog4cxx.so
+/home/jeppe/consensus-formation-flying/ros_ws/devel/lib/consensus/consensus: /usr/lib/x86_64-linux-gnu/libboost_regex.so.1.71.0
+/home/jeppe/consensus-formation-flying/ros_ws/devel/lib/consensus/consensus: /opt/ros/noetic/lib/libroscpp_serialization.so
+/home/jeppe/consensus-formation-flying/ros_ws/devel/lib/consensus/consensus: /opt/ros/noetic/lib/libxmlrpcpp.so
+/home/jeppe/consensus-formation-flying/ros_ws/devel/lib/consensus/consensus: /opt/ros/noetic/lib/librostime.so
+/home/jeppe/consensus-formation-flying/ros_ws/devel/lib/consensus/consensus: /usr/lib/x86_64-linux-gnu/libboost_date_time.so.1.71.0
+/home/jeppe/consensus-formation-flying/ros_ws/devel/lib/consensus/consensus: /opt/ros/noetic/lib/libcpp_common.so
+/home/jeppe/consensus-formation-flying/ros_ws/devel/lib/consensus/consensus: /usr/lib/x86_64-linux-gnu/libboost_system.so.1.71.0
+/home/jeppe/consensus-formation-flying/ros_ws/devel/lib/consensus/consensus: /usr/lib/x86_64-linux-gnu/libboost_thread.so.1.71.0
+/home/jeppe/consensus-formation-flying/ros_ws/devel/lib/consensus/consensus: /usr/lib/x86_64-linux-gnu/libconsole_bridge.so.0.4
+/home/jeppe/consensus-formation-flying/ros_ws/devel/lib/consensus/consensus: consensus/CMakeFiles/consensus.dir/link.txt
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/jeppe/consensus-formation-flying/ros_ws/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX executable /home/jeppe/consensus-formation-flying/ros_ws/devel/lib/consensus/consensus"
+	cd /home/jeppe/consensus-formation-flying/ros_ws/build/consensus && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/consensus.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
-consensus/CMakeFiles/consensus.dir/build: /home/jeppe/consensus_formation_flying/ros_ws/devel/lib/consensus/consensus
+consensus/CMakeFiles/consensus.dir/build: /home/jeppe/consensus-formation-flying/ros_ws/devel/lib/consensus/consensus
 
 .PHONY : consensus/CMakeFiles/consensus.dir/build
 
 consensus/CMakeFiles/consensus.dir/clean:
-	cd /home/jeppe/consensus_formation_flying/ros_ws/build/consensus && $(CMAKE_COMMAND) -P CMakeFiles/consensus.dir/cmake_clean.cmake
+	cd /home/jeppe/consensus-formation-flying/ros_ws/build/consensus && $(CMAKE_COMMAND) -P CMakeFiles/consensus.dir/cmake_clean.cmake
 .PHONY : consensus/CMakeFiles/consensus.dir/clean
 
 consensus/CMakeFiles/consensus.dir/depend:
-	cd /home/jeppe/consensus_formation_flying/ros_ws/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/jeppe/consensus_formation_flying/ros_ws/src /home/jeppe/consensus_formation_flying/ros_ws/src/consensus /home/jeppe/consensus_formation_flying/ros_ws/build /home/jeppe/consensus_formation_flying/ros_ws/build/consensus /home/jeppe/consensus_formation_flying/ros_ws/build/consensus/CMakeFiles/consensus.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/jeppe/consensus-formation-flying/ros_ws/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/jeppe/consensus-formation-flying/ros_ws/src /home/jeppe/consensus-formation-flying/ros_ws/src/consensus /home/jeppe/consensus-formation-flying/ros_ws/build /home/jeppe/consensus-formation-flying/ros_ws/build/consensus /home/jeppe/consensus-formation-flying/ros_ws/build/consensus/CMakeFiles/consensus.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : consensus/CMakeFiles/consensus.dir/depend
 

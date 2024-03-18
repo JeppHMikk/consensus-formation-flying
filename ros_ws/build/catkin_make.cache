@@ -1,2 +1,2 @@
 consensus:formation_control:joy_reader
--DCATKIN_DEVEL_PREFIX=/home/jeppe/consensus_formation_flying/ros_ws/devel -DCMAKE_INSTALL_PREFIX=/home/jeppe/consensus_formation_flying/ros_ws/install -G Unix Makefiles
+-DCATKIN_DEVEL_PREFIX=/home/jeppe/consensus-formation-flying/ros_ws/devel -DCMAKE_INSTALL_PREFIX=/home/jeppe/consensus-formation-flying/ros_ws/install -G Unix Makefiles

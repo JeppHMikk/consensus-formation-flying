@@ -1,4 +1,4 @@
-prefix=/home/jeppe/consensus_formation_flying/ros_ws/install
+prefix=/home/jeppe/consensus-formation-flying/ros_ws/install
 
 Name: consensus
 Description: Description of consensus

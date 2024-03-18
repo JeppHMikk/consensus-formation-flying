@@ -6,13 +6,13 @@
 
 #IncludeRegexTransform: 
 
-/home/jeppe/consensus_formation_flying/ros_ws/src/formation_control/src/formation_control.cpp
+/home/jeppe/consensus-formation-flying/ros_ws/src/formation_control/src/formation_control.cpp
 iostream
 -
 ros/ros.h
-/home/jeppe/consensus_formation_flying/ros_ws/src/formation_control/src/ros/ros.h
+/home/jeppe/consensus-formation-flying/ros_ws/src/formation_control/src/ros/ros.h
 std_msgs/Int32MultiArray.h
-/home/jeppe/consensus_formation_flying/ros_ws/src/formation_control/src/std_msgs/Int32MultiArray.h
+/home/jeppe/consensus-formation-flying/ros_ws/src/formation_control/src/std_msgs/Int32MultiArray.h
 sstream
 -
 Eigen/Dense
@@ -22,13 +22,13 @@ mrs_msgs/VelocityReferenceStamped.h
 cmath
 -
 nav_msgs/Odometry.h
-/home/jeppe/consensus_formation_flying/ros_ws/src/formation_control/src/nav_msgs/Odometry.h
+/home/jeppe/consensus-formation-flying/ros_ws/src/formation_control/src/nav_msgs/Odometry.h
 geometry_msgs/Pose.h
-/home/jeppe/consensus_formation_flying/ros_ws/src/formation_control/src/geometry_msgs/Pose.h
+/home/jeppe/consensus-formation-flying/ros_ws/src/formation_control/src/geometry_msgs/Pose.h
 geometry_msgs/PoseWithCovariance.h
-/home/jeppe/consensus_formation_flying/ros_ws/src/formation_control/src/geometry_msgs/PoseWithCovariance.h
+/home/jeppe/consensus-formation-flying/ros_ws/src/formation_control/src/geometry_msgs/PoseWithCovariance.h
 geometry_msgs/Point.h
-/home/jeppe/consensus_formation_flying/ros_ws/src/formation_control/src/geometry_msgs/Point.h
+/home/jeppe/consensus-formation-flying/ros_ws/src/formation_control/src/geometry_msgs/Point.h
 chrono
 -
 

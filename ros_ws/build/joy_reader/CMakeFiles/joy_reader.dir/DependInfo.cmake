@@ -4,7 +4,7 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_CXX
-  "/home/jeppe/consensus_formation_flying/ros_ws/src/joy_reader/src/joy_reader.cpp" "/home/jeppe/consensus_formation_flying/ros_ws/build/joy_reader/CMakeFiles/joy_reader.dir/src/joy_reader.cpp.o"
+  "/home/jeppe/consensus-formation-flying/ros_ws/src/joy_reader/src/joy_reader.cpp" "/home/jeppe/consensus-formation-flying/ros_ws/build/joy_reader/CMakeFiles/joy_reader.dir/src/joy_reader.cpp.o"
   )
 set(CMAKE_CXX_COMPILER_ID "GNU")
 

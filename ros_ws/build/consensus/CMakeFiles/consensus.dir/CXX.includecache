@@ -6,15 +6,15 @@
 
 #IncludeRegexTransform: 
 
-/home/jeppe/consensus_formation_flying/ros_ws/src/consensus/src/consensus_node.cpp
+/home/jeppe/consensus-formation-flying/ros_ws/src/consensus/src/consensus_node.cpp
 ros/ros.h
-/home/jeppe/consensus_formation_flying/ros_ws/src/consensus/src/ros/ros.h
+/home/jeppe/consensus-formation-flying/ros_ws/src/consensus/src/ros/ros.h
 std_msgs/Int32MultiArray.h
-/home/jeppe/consensus_formation_flying/ros_ws/src/consensus/src/std_msgs/Int32MultiArray.h
+/home/jeppe/consensus-formation-flying/ros_ws/src/consensus/src/std_msgs/Int32MultiArray.h
 std_msgs/Float32MultiArray.h
-/home/jeppe/consensus_formation_flying/ros_ws/src/consensus/src/std_msgs/Float32MultiArray.h
+/home/jeppe/consensus-formation-flying/ros_ws/src/consensus/src/std_msgs/Float32MultiArray.h
 nav_msgs/Odometry.h
-/home/jeppe/consensus_formation_flying/ros_ws/src/consensus/src/nav_msgs/Odometry.h
+/home/jeppe/consensus-formation-flying/ros_ws/src/consensus/src/nav_msgs/Odometry.h
 Eigen/Dense
 -
 mrs_msgs/VelocityReferenceStamped.h
@@ -24,13 +24,13 @@ mrs_msgs/ReferenceStamped.h
 mrs_msgs/TrajectoryReference.h
 -
 geometry_msgs/Pose.h
-/home/jeppe/consensus_formation_flying/ros_ws/src/consensus/src/geometry_msgs/Pose.h
+/home/jeppe/consensus-formation-flying/ros_ws/src/consensus/src/geometry_msgs/Pose.h
 geometry_msgs/PoseWithCovariance.h
-/home/jeppe/consensus_formation_flying/ros_ws/src/consensus/src/geometry_msgs/PoseWithCovariance.h
+/home/jeppe/consensus-formation-flying/ros_ws/src/consensus/src/geometry_msgs/PoseWithCovariance.h
 geometry_msgs/Point.h
-/home/jeppe/consensus_formation_flying/ros_ws/src/consensus/src/geometry_msgs/Point.h
+/home/jeppe/consensus-formation-flying/ros_ws/src/consensus/src/geometry_msgs/Point.h
 visualization_msgs/Marker.h
-/home/jeppe/consensus_formation_flying/ros_ws/src/consensus/src/visualization_msgs/Marker.h
+/home/jeppe/consensus-formation-flying/ros_ws/src/consensus/src/visualization_msgs/Marker.h
 sstream
 -
 random

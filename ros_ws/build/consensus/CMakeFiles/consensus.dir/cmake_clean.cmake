@@ -1,6 +1,6 @@
 file(REMOVE_RECURSE
-  "/home/jeppe/consensus_formation_flying/ros_ws/devel/lib/consensus/consensus"
-  "/home/jeppe/consensus_formation_flying/ros_ws/devel/lib/consensus/consensus.pdb"
+  "/home/jeppe/consensus-formation-flying/ros_ws/devel/lib/consensus/consensus"
+  "/home/jeppe/consensus-formation-flying/ros_ws/devel/lib/consensus/consensus.pdb"
   "CMakeFiles/consensus.dir/src/consensus_node.cpp.o"
 )
 

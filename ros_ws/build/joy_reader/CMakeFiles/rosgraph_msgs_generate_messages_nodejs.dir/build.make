@@ -43,10 +43,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/jeppe/consensus_formation_flying/ros_ws/src
+CMAKE_SOURCE_DIR = /home/jeppe/consensus-formation-flying/ros_ws/src
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/jeppe/consensus_formation_flying/ros_ws/build
+CMAKE_BINARY_DIR = /home/jeppe/consensus-formation-flying/ros_ws/build
 
 # Utility rule file for rosgraph_msgs_generate_messages_nodejs.
 
@@ -63,10 +63,10 @@ joy_reader/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/build: rosgraph
 .PHONY : joy_reader/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/build
 
 joy_reader/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/clean:
-	cd /home/jeppe/consensus_formation_flying/ros_ws/build/joy_reader && $(CMAKE_COMMAND) -P CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/cmake_clean.cmake
+	cd /home/jeppe/consensus-formation-flying/ros_ws/build/joy_reader && $(CMAKE_COMMAND) -P CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/cmake_clean.cmake
 .PHONY : joy_reader/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/clean
 
 joy_reader/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/depend:
-	cd /home/jeppe/consensus_formation_flying/ros_ws/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/jeppe/consensus_formation_flying/ros_ws/src /home/jeppe/consensus_formation_flying/ros_ws/src/joy_reader /home/jeppe/consensus_formation_flying/ros_ws/build /home/jeppe/consensus_formation_flying/ros_ws/build/joy_reader /home/jeppe/consensus_formation_flying/ros_ws/build/joy_reader/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/jeppe/consensus-formation-flying/ros_ws/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/jeppe/consensus-formation-flying/ros_ws/src /home/jeppe/consensus-formation-flying/ros_ws/src/joy_reader /home/jeppe/consensus-formation-flying/ros_ws/build /home/jeppe/consensus-formation-flying/ros_ws/build/joy_reader /home/jeppe/consensus-formation-flying/ros_ws/build/joy_reader/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : joy_reader/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/depend
 

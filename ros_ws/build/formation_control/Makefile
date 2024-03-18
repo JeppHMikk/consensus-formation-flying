@@ -48,10 +48,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/jeppe/consensus_formation_flying/ros_ws/src
+CMAKE_SOURCE_DIR = /home/jeppe/consensus-formation-flying/ros_ws/src
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/jeppe/consensus_formation_flying/ros_ws/build
+CMAKE_BINARY_DIR = /home/jeppe/consensus-formation-flying/ros_ws/build
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -137,14 +137,14 @@ test/fast: test
 
 # The main all target
 all: cmake_check_build_system
-	cd /home/jeppe/consensus_formation_flying/ros_ws/build && $(CMAKE_COMMAND) -E cmake_progress_start /home/jeppe/consensus_formation_flying/ros_ws/build/CMakeFiles /home/jeppe/consensus_formation_flying/ros_ws/build/formation_control/CMakeFiles/progress.marks
-	cd /home/jeppe/consensus_formation_flying/ros_ws/build && $(MAKE) -f CMakeFiles/Makefile2 formation_control/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/jeppe/consensus_formation_flying/ros_ws/build/CMakeFiles 0
+	cd /home/jeppe/consensus-formation-flying/ros_ws/build && $(CMAKE_COMMAND) -E cmake_progress_start /home/jeppe/consensus-formation-flying/ros_ws/build/CMakeFiles /home/jeppe/consensus-formation-flying/ros_ws/build/formation_control/CMakeFiles/progress.marks
+	cd /home/jeppe/consensus-formation-flying/ros_ws/build && $(MAKE) -f CMakeFiles/Makefile2 formation_control/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/jeppe/consensus-formation-flying/ros_ws/build/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
 clean:
-	cd /home/jeppe/consensus_formation_flying/ros_ws/build && $(MAKE) -f CMakeFiles/Makefile2 formation_control/clean
+	cd /home/jeppe/consensus-formation-flying/ros_ws/build && $(MAKE) -f CMakeFiles/Makefile2 formation_control/clean
 .PHONY : clean
 
 # The main clean target
@@ -154,22 +154,22 @@ clean/fast: clean
 
 # Prepare targets for installation.
 preinstall: all
-	cd /home/jeppe/consensus_formation_flying/ros_ws/build && $(MAKE) -f CMakeFiles/Makefile2 formation_control/preinstall
+	cd /home/jeppe/consensus-formation-flying/ros_ws/build && $(MAKE) -f CMakeFiles/Makefile2 formation_control/preinstall
 .PHONY : preinstall
 
 # Prepare targets for installation.
 preinstall/fast:
-	cd /home/jeppe/consensus_formation_flying/ros_ws/build && $(MAKE) -f CMakeFiles/Makefile2 formation_control/preinstall
+	cd /home/jeppe/consensus-formation-flying/ros_ws/build && $(MAKE) -f CMakeFiles/Makefile2 formation_control/preinstall
 .PHONY : preinstall/fast
 
 # clear depends
 depend:
-	cd /home/jeppe/consensus_formation_flying/ros_ws/build && $(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
+	cd /home/jeppe/consensus-formation-flying/ros_ws/build && $(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
 .PHONY : depend
 
 # Convenience name for target.
 formation_control/CMakeFiles/formation_control.dir/rule:
-	cd /home/jeppe/consensus_formation_flying/ros_ws/build && $(MAKE) -f CMakeFiles/Makefile2 formation_control/CMakeFiles/formation_control.dir/rule
+	cd /home/jeppe/consensus-formation-flying/ros_ws/build && $(MAKE) -f CMakeFiles/Makefile2 formation_control/CMakeFiles/formation_control.dir/rule
 .PHONY : formation_control/CMakeFiles/formation_control.dir/rule
 
 # Convenience name for target.
@@ -179,7 +179,7 @@ formation_control: formation_control/CMakeFiles/formation_control.dir/rule
 
 # fast build rule for target.
 formation_control/fast:
-	cd /home/jeppe/consensus_formation_flying/ros_ws/build && $(MAKE) -f formation_control/CMakeFiles/formation_control.dir/build.make formation_control/CMakeFiles/formation_control.dir/build
+	cd /home/jeppe/consensus-formation-flying/ros_ws/build && $(MAKE) -f formation_control/CMakeFiles/formation_control.dir/build.make formation_control/CMakeFiles/formation_control.dir/build
 .PHONY : formation_control/fast
 
 src/formation_control.o: src/formation_control.cpp.o
@@ -188,7 +188,7 @@ src/formation_control.o: src/formation_control.cpp.o
 
 # target to build an object file
 src/formation_control.cpp.o:
-	cd /home/jeppe/consensus_formation_flying/ros_ws/build && $(MAKE) -f formation_control/CMakeFiles/formation_control.dir/build.make formation_control/CMakeFiles/formation_control.dir/src/formation_control.cpp.o
+	cd /home/jeppe/consensus-formation-flying/ros_ws/build && $(MAKE) -f formation_control/CMakeFiles/formation_control.dir/build.make formation_control/CMakeFiles/formation_control.dir/src/formation_control.cpp.o
 .PHONY : src/formation_control.cpp.o
 
 src/formation_control.i: src/formation_control.cpp.i
@@ -197,7 +197,7 @@ src/formation_control.i: src/formation_control.cpp.i
 
 # target to preprocess a source file
 src/formation_control.cpp.i:
-	cd /home/jeppe/consensus_formation_flying/ros_ws/build && $(MAKE) -f formation_control/CMakeFiles/formation_control.dir/build.make formation_control/CMakeFiles/formation_control.dir/src/formation_control.cpp.i
+	cd /home/jeppe/consensus-formation-flying/ros_ws/build && $(MAKE) -f formation_control/CMakeFiles/formation_control.dir/build.make formation_control/CMakeFiles/formation_control.dir/src/formation_control.cpp.i
 .PHONY : src/formation_control.cpp.i
 
 src/formation_control.s: src/formation_control.cpp.s
@@ -206,7 +206,7 @@ src/formation_control.s: src/formation_control.cpp.s
 
 # target to generate assembly for a file
 src/formation_control.cpp.s:
-	cd /home/jeppe/consensus_formation_flying/ros_ws/build && $(MAKE) -f formation_control/CMakeFiles/formation_control.dir/build.make formation_control/CMakeFiles/formation_control.dir/src/formation_control.cpp.s
+	cd /home/jeppe/consensus-formation-flying/ros_ws/build && $(MAKE) -f formation_control/CMakeFiles/formation_control.dir/build.make formation_control/CMakeFiles/formation_control.dir/src/formation_control.cpp.s
 .PHONY : src/formation_control.cpp.s
 
 # Help Target
@@ -237,6 +237,6 @@ help:
 # No rule that depends on this can have commands that come from listfiles
 # because they might be regenerated.
 cmake_check_build_system:
-	cd /home/jeppe/consensus_formation_flying/ros_ws/build && $(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
+	cd /home/jeppe/consensus-formation-flying/ros_ws/build && $(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
 .PHONY : cmake_check_build_system
 

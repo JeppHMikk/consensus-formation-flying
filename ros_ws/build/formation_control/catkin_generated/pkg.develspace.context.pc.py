@@ -4,5 +4,5 @@ PROJECT_PKG_CONFIG_INCLUDE_DIRS = "/usr/include/eigen3".split(';') if "/usr/incl
 PROJECT_CATKIN_DEPENDS = "".replace(';', ' ')
 PKG_CONFIG_LIBRARIES_WITH_PREFIX = "".split(';') if "" != "" else []
 PROJECT_NAME = "formation_control"
-PROJECT_SPACE_DIR = "/home/jeppe/consensus_formation_flying/ros_ws/devel"
+PROJECT_SPACE_DIR = "/home/jeppe/consensus-formation-flying/ros_ws/devel"
 PROJECT_VERSION = "0.0.0"

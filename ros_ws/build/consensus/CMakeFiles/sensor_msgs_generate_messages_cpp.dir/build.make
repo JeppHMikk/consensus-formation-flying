@@ -43,10 +43,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/jeppe/consensus_formation_flying/ros_ws/src
+CMAKE_SOURCE_DIR = /home/jeppe/consensus-formation-flying/ros_ws/src
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/jeppe/consensus_formation_flying/ros_ws/build
+CMAKE_BINARY_DIR = /home/jeppe/consensus-formation-flying/ros_ws/build
 
 # Utility rule file for sensor_msgs_generate_messages_cpp.
 
@@ -63,10 +63,10 @@ consensus/CMakeFiles/sensor_msgs_generate_messages_cpp.dir/build: sensor_msgs_ge
 .PHONY : consensus/CMakeFiles/sensor_msgs_generate_messages_cpp.dir/build
 
 consensus/CMakeFiles/sensor_msgs_generate_messages_cpp.dir/clean:
-	cd /home/jeppe/consensus_formation_flying/ros_ws/build/consensus && $(CMAKE_COMMAND) -P CMakeFiles/sensor_msgs_generate_messages_cpp.dir/cmake_clean.cmake
+	cd /home/jeppe/consensus-formation-flying/ros_ws/build/consensus && $(CMAKE_COMMAND) -P CMakeFiles/sensor_msgs_generate_messages_cpp.dir/cmake_clean.cmake
 .PHONY : consensus/CMakeFiles/sensor_msgs_generate_messages_cpp.dir/clean
 
 consensus/CMakeFiles/sensor_msgs_generate_messages_cpp.dir/depend:
-	cd /home/jeppe/consensus_formation_flying/ros_ws/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/jeppe/consensus_formation_flying/ros_ws/src /home/jeppe/consensus_formation_flying/ros_ws/src/consensus /home/jeppe/consensus_formation_flying/ros_ws/build /home/jeppe/consensus_formation_flying/ros_ws/build/consensus /home/jeppe/consensus_formation_flying/ros_ws/build/consensus/CMakeFiles/sensor_msgs_generate_messages_cpp.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/jeppe/consensus-formation-flying/ros_ws/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/jeppe/consensus-formation-flying/ros_ws/src /home/jeppe/consensus-formation-flying/ros_ws/src/consensus /home/jeppe/consensus-formation-flying/ros_ws/build /home/jeppe/consensus-formation-flying/ros_ws/build/consensus /home/jeppe/consensus-formation-flying/ros_ws/build/consensus/CMakeFiles/sensor_msgs_generate_messages_cpp.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : consensus/CMakeFiles/sensor_msgs_generate_messages_cpp.dir/depend
 

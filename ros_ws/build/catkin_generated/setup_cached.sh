@@ -7,4 +7,7 @@
 # new environment variables
 
 # modified environment variables
-export PWD='/home/jeppe/consensus_formation_flying/ros_ws/build'
+export CMAKE_PREFIX_PATH="/home/jeppe/consensus-formation-flying/ros_ws/devel:$CMAKE_PREFIX_PATH"
+export PWD='/home/jeppe/consensus-formation-flying/ros_ws/build'
+export ROSLISP_PACKAGE_DIRECTORIES="/home/jeppe/consensus-formation-flying/ros_ws/devel/share/common-lisp:$ROSLISP_PACKAGE_DIRECTORIES"
+export ROS_PACKAGE_PATH="/home/jeppe/consensus-formation-flying/ros_ws/src:$ROS_PACKAGE_PATH"
