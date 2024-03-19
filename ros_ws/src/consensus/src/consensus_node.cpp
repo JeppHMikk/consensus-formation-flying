@@ -25,37 +25,26 @@
 using namespace std;
 using namespace Eigen;
 
-const int N = 4; // number of robots
-const float clearance = 2;
-const float max_vel = 10.0;
-const float rho_0 = 2.0;
-const float rho_1 = 5.0;
-const float b = max_vel + 1.0;
-const float a = -1/2*b*1/(rho_1 - rho_0);
-const float g = b*(rho_1 - 1/2*(rho_1 - rho_0));
-const float r = 0.4; // robot minimum containing sphere radius
-const float Br = 2*r + clearance; // distance where collisions is assumed to happen
+int N;
+float clearance = 2;
+float max_vel = 10.0;
+float rho_0 = 2.0;
+float rho_1 = 5.0;
+float b = max_vel + 1.0;
+float a = -1/2*b*1/(rho_1 - rho_0);
+float g = b*(rho_1 - 1/2*(rho_1 - rho_0));
+float r = 0.4; // robot minimum containing sphere radius
+float Br = 2*r + clearance; // distance where collisions is assumed to happen
 
-Matrix <float, 3, N> p; // robot position
-Matrix <float, 3, 3> Sigma[N]; // position estimate covariance
-
-Matrix <float, 5, 1> eta; // formation parameters (phi,sx,sy,tx,ty)
-Matrix <float, 5, 1> deta; // formation parameter derivative
-
-Matrix <float, 5, N-1> eta_N; // formation parameters (phi,sx,sy,tx,ty)
-
-Matrix <float, 5, 1> deta_N; // consensus formation parameter derivative
-Matrix <float, 5, 1> deta_joy;
-Matrix <float, 5, 1> deta_rep;
-
-Matrix <float, 2, N> C; // base configuration
-
-Matrix <int, 6, 1> joy_val; // joypad values
-
-Matrix <float, 2, 2> c_obst;
-Matrix <float, 2, 1> r_obst;
-
-Matrix <float, 2, 2> R90;
+MatrixXf eta(5,1); // formation parameters (phi,sx,sy,tx,ty)
+MatrixXf deta(5,1); // formation parameter derivative
+MatrixXf deta_N(5,1); // consensus formation parameter derivative
+MatrixXf deta_joy(5,1);
+MatrixXf deta_rep(5,1);
+MatrixXd joy_val(6,1); // joypad values
+MatrixXf c_obst(2,2);
+MatrixXf r_obst(2,1);
+MatrixXf R90(2,2); 
 
 int arraySize = 5;
 const char* uavName = std::getenv("UAV_NAME"); // load UAV_NAME environment variable
@@ -72,25 +61,26 @@ float Kv = 0.25;
 // Subscriber callback for getting joypad values
 void joyCallback(const std_msgs::Int32MultiArray::ConstPtr& msg)
 {
-  deta_joy << 1*(float(msg->data[4])/32767.0 - float(msg->data[5])/32767.0),
-              2*float(msg->data[0])/32767.0,
-              -2*float(msg->data[1])/32767.0,
-              2.5*float(msg->data[2])/32767.0,
-              -2.5*float(msg->data[3])/32767.0;
+  deta_joy << 2*(float(msg->data[4])/32767.0 - float(msg->data[5])/32767.0),
+              4*float(msg->data[0])/32767.0,
+              -4*float(msg->data[1])/32767.0,
+              5*float(msg->data[2])/32767.0,
+              -5*float(msg->data[3])/32767.0;
 }
 
-void etaCallback(int id, const std_msgs::Float32MultiArray::ConstPtr& msg){
+void etaCallback(Eigen::Matrix<float, 5, 1>* eta_ptr, const std_msgs::Float32MultiArray::ConstPtr& msg){
   for(int i = 0; i < 5; i++){
-    eta_N(i,id) = msg->data[i];
+    //(*eta_ptr)(i,id) = msg->data[i];
+    (*eta_ptr)(i,0) = msg->data[i];
   }
 }
 
 // Subscriber callback for getting position estimates
-void posCallback(int id, const nav_msgs::Odometry::ConstPtr& msg) {
+void posCallback(Eigen::Matrix<float, 3, 1>* p_ptr, Eigen::Matrix<float, 3, 3>* Sigma_ptr, const nav_msgs::Odometry::ConstPtr& msg) {
     // extract position from message
-    p.block(0,id,3,1) << msg->pose.pose.position.x,
-                        msg->pose.pose.position.y,
-                        msg->pose.pose.position.z;
+    (*p_ptr) << msg->pose.pose.position.x,
+                msg->pose.pose.position.y,
+                msg->pose.pose.position.z;
     // extract covariance from message
     Eigen::Matrix <float, 6, 6> Sigma_msg;
     for(int i=0; i<6; i++){
@@ -98,7 +88,7 @@ void posCallback(int id, const nav_msgs::Odometry::ConstPtr& msg) {
             Sigma_msg(i,j) = msg->pose.covariance[6*i+j];
         }
     }
-    Sigma[id] << Sigma_msg.block(0,0,3,3);
+    (*Sigma_ptr) << Sigma_msg.block(0,0,3,3);
 }
 
 // Function for generation random float
@@ -107,10 +97,10 @@ float randomFloat(){
 }
 
 // Function for calculating Jacobian 
-Eigen::MatrixXf Jacobian(Eigen::MatrixXf eta_in){
+Eigen::MatrixXf Jacobian(Eigen::MatrixXf eta_in, Eigen::MatrixXf C){
   Matrix <float, 2, 5> J;
-  J << -sin(eta_in(0,0))*eta_in(1,0)*C(0,uavNum-1) -cos(eta_in(0,0))*eta_in(2,0)*C(1,uavNum-1), cos(eta_in(0,0))*C(0,uavNum-1), -sin(eta_in(0,0))*C(1,uavNum-1), 1, 0,
-        cos(eta_in(0,0))*eta_in(1,0)*C(0,uavNum-1) -sin(eta_in(0,0))*eta_in(2,0)*C(1,uavNum-1), sin(eta_in(0,0))*C(0,uavNum-1), cos(eta_in(0,0))*C(1,uavNum-1), 0, 1;
+  J << -sin(eta_in(0,0))*eta_in(1,0)*C(0,0) -cos(eta_in(0,0))*eta_in(2,0)*C(1,0), cos(eta_in(0,0))*C(0,0), -sin(eta_in(0,0))*C(1,0), 1, 0,
+        cos(eta_in(0,0))*eta_in(1,0)*C(0,0) -sin(eta_in(0,0))*eta_in(2,0)*C(1,0), sin(eta_in(0,0))*C(0,0), cos(eta_in(0,0))*C(1,0), 0, 1;
   return J;
 }
 
@@ -139,19 +129,19 @@ Eigen::MatrixXf transVec(Eigen::MatrixXf eta_in){
 }
 
 // Reference position from transformation of base configuration
-Eigen::MatrixXf refPos(Eigen::MatrixXf eta_in){
+Eigen::MatrixXf refPos(Eigen::MatrixXf eta_in, Eigen::MatrixXf C){
   Eigen::MatrixXf R = rotMat(eta_in);
   Eigen::MatrixXf S = scaleMat(eta_in);
   Eigen::MatrixXf t = transVec(eta_in);
   Eigen::Matrix <float, 3, 1> p;
-  p << R*S*C.col(uavNum-1) + t, 1.5;
+  p << R*S*C + t, 1.5;
   return p;
 }
 
 // Reference velocity from parameter derivative
-Eigen::MatrixXf refVel(Eigen::MatrixXf eta_in, Eigen::MatrixXf deta_in){
+Eigen::MatrixXf refVel(Eigen::MatrixXf eta_in, Eigen::MatrixXf deta_in, Eigen::MatrixXf C){
   Eigen::Matrix <float, 3, 5> J;
-  J << Jacobian(eta_in), 
+  J << Jacobian(eta_in,C), 
        0, 0, 0, 0, 0;
   return Kv*J*deta_in;
 }
@@ -177,8 +167,8 @@ Eigen::MatrixXf repPot(Eigen::MatrixXf p_in){
 }
 
 // Function for mapping from velocity to parameter derivative
-Eigen::MatrixXf v2deta(Eigen::MatrixXf v, Eigen::MatrixXf eta_in){
-  Eigen::MatrixXf J = Jacobian(eta_in);
+Eigen::MatrixXf v2deta(Eigen::MatrixXf v, Eigen::MatrixXf eta_in, Eigen::MatrixXf C){
+  Eigen::MatrixXf J = Jacobian(eta_in,C);
   Eigen::MatrixXf J_inv = J.transpose()*(J*J.transpose()).inverse();
   Eigen::MatrixXf deta = J_inv*v;
   return deta;
@@ -250,9 +240,6 @@ Eigen::MatrixXf projScale(Eigen::MatrixXf s, Eigen::MatrixXf A, Eigen::MatrixXf 
     return s;
   }
   else{
-
-    cout << to_string(time(NULL)) + ", projecting" << endl;
-
     // Find the most violated constraint
     auto tmp = smEl(A*s-b);
     int i = get<1>(tmp);
@@ -333,26 +320,36 @@ Eigen::MatrixXf projScale(Eigen::MatrixXf s, Eigen::MatrixXf A, Eigen::MatrixXf 
 int main(int argc, char **argv)
 {
 
+  // Initialize ROS node
+  ros::init(argc, argv, uavNameString + "_consensus_node");
+  ros::NodeHandle n;
+
+  ros::param::get("/N", N);
+
+  vector<Matrix<float, 3, 1>> p(N); // position estimate
+  vector<Matrix<float, 3, 3>> Sigma(N); // position estimate covariance
+  vector<Matrix<float, 5, 1>> eta_N(N);
+  vector<Matrix<float, 2, 1>> C(N); // base configuration
+
   R90 << 0, -1, 1, 0;
 
   // Initialise obstacle positions
-  c_obst.col(0) << 10, 20;
+  c_obst.col(0) << 10, 30;
   r_obst(0,0) = 2;
-  c_obst.col(1) << -10, 20;
+  c_obst.col(1) << -10, 30;
   r_obst(1,0) = 2;
 
   // Initialize base configuration
-  C.col(0) << 1, 1;
-  C.col(1) << -1, 1;
-  C.col(2) << -1, -1;
-  C.col(3) << 1, -1;
+  C[0] << 1, 1;
+  C[1] << -1, 1;
+  C[2] << -1, -1;
+  C[3] << 1, -1;
 
-  
   // Fill eta with random numbers
   /*
   srand(time(NULL));
   for(int i = 0; i < 5; i++){
-    eta(i,0) = randomFloat();
+    eta(i,0) = 5*randomFloat();
     if(i == 1 || i == 2)
       eta(i,0) += 4;
     //std::cout << eta(i,0) << std::endl;
@@ -360,13 +357,9 @@ int main(int argc, char **argv)
   */
   // Initialize eta
   eta << 0, 5, 5, 0, 0;
-  for(int i=0; i<N-1; i++){
-    eta_N.block(0,i,5,1) = eta;
+  for(int i=0; i<N; i++){
+    eta_N[i] = eta;
   }
-
-  // Initialize ROS node
-  ros::init(argc, argv, uavNameString + "_consensus_node");
-  ros::NodeHandle n;
   
   // Initialize publisher for consensus
   ros::Publisher consensus_pub = n.advertise<std_msgs::Float32MultiArray>("/" + uavNameString + "/eta", 1);
@@ -375,19 +368,25 @@ int main(int argc, char **argv)
   ros::Subscriber joy_sub = n.subscribe("joy_value", 1, joyCallback);
 
   // Initialize subscribers for consensus
-  ros::Subscriber consensus[N-1];
+  ros::Subscriber consensus[N];
   int iter = 0;
-  for(int i=1; i<=N; i++){
-    if(i != uavNum){
-      consensus[iter] = n.subscribe<std_msgs::Float32MultiArray>("uav"+to_string(iter+1)+"/eta", 1000, boost::bind(etaCallback, iter, _1));
-      iter = iter + 1;
+  for(int i=0; i<N; i++){
+    if(i != uavNum-1){
+      auto callback = [&eta_N, i](const std_msgs::Float32MultiArray::ConstPtr& msg) {
+        etaCallback(&eta_N[i], msg);
+      };
+      consensus[i] = n.subscribe<std_msgs::Float32MultiArray>("uav"+to_string(i+1)+"/eta", 1, callback);
     }
   }
 
   // Initialize subscribers for position estimates
+
   ros::Subscriber pos_sub[N];
-  for(int i=1; i<=N; i++){
-    pos_sub[i-1] = n.subscribe<nav_msgs::Odometry>("uav"+to_string(i)+"/estimation_manager/odom_main", 1, boost::bind(posCallback, i-1, _1));
+  for (int i = 0; i < N; i++) {
+    auto callback_pos = [&p, &Sigma, i](const nav_msgs::Odometry::ConstPtr& msg) {
+      posCallback(&p[i], &Sigma[i], msg);
+    };
+    pos_sub[i] = n.subscribe<nav_msgs::Odometry>("uav" + to_string(i+1) + "/estimation_manager/odom_main", 1, callback_pos);
   }
 
   // Initialize velocity reference publisher
@@ -438,7 +437,7 @@ int main(int argc, char **argv)
     int iter = 0;
     for(int i=0; i<4; i++){
       if(i != (uavNum-1)){
-        auto const_ij = genConst(eta.block(1,0,2,1), Sigma[i].block(0,0,2,2), Sigma[uavNum-1].block(0,0,2,2), C.block(0,i,2,1), C.block(0,uavNum-1,2,1), m_soft);
+        auto const_ij = genConst(eta.block(1,0,2,1), Sigma[i].block(0,0,2,2), Sigma[uavNum-1].block(0,0,2,2), C[i], C[uavNum-1], m_soft);
         A_soft.row(iter) << get<0>(const_ij).transpose();
         b_soft(iter,0) = get<1>(const_ij);
         iter += 1;
@@ -451,7 +450,7 @@ int main(int argc, char **argv)
     iter = 0;
     for(int i=0; i<4; i++){
       if(i != (uavNum-1)){
-        auto const_ij = genConst(eta.block(1,0,2,1), Sigma[i].block(0,0,2,2), Sigma[uavNum-1].block(0,0,2,2), C.block(0,i,2,1), C.block(0,uavNum-1,2,1), m_hard);
+        auto const_ij = genConst(eta.block(1,0,2,1), Sigma[i].block(0,0,2,2), Sigma[uavNum-1].block(0,0,2,2), C[i], C[uavNum-1], m_hard);
         A_hard.row(iter) << get<0>(const_ij).transpose();
         b_hard(iter,0) = get<1>(const_ij);
         iter += 1;
@@ -469,12 +468,14 @@ int main(int argc, char **argv)
     marker_pub2.publish(marker);
 
     // Repulsive potential
-    deta_rep = v2deta(repPot(p.block(0,uavNum-1,2,1)),eta);
+    deta_rep = v2deta(repPot(p[uavNum-1]),eta,C[uavNum-1]);
 
     // Consensus step
     deta_N.setZero();
-    for(int i=0; i<N-1; i++){
-      deta_N = deta_N + 1*(eta_N.block(0,i,5,1) - eta);
+    for(int i=0; i<N; i++){
+      if(i != uavNum-1){
+        deta_N = deta_N + (eta_N[i] - eta);
+      }
     }
 
     // Perform soft projection step
@@ -485,7 +486,7 @@ int main(int argc, char **argv)
     }
 
     // Calculate parameter derivative
-    deta = deta_joy + 5*deta_N + deta_rep + deta_soft;
+    deta = deta_joy + 5*deta_N + deta_rep; // + deta_soft;
 
     // Perform hard projection step
     MatrixXf s_proj_hard = projScale(eta.block(1,0,2,1)+deta.block(1,0,2,1), A_hard, b_hard);
@@ -494,17 +495,11 @@ int main(int argc, char **argv)
     }
 
     // Calculate reference position and velocity
-    Eigen::MatrixXf vr = refVel(eta,deta);
-    Eigen::MatrixXf pr = refPos(eta);
+    Eigen::MatrixXf vr = refVel(eta,deta,C[uavNum-1]);
+    Eigen::MatrixXf pr = refPos(eta,C[uavNum-1]);
 
     // Update eta
     eta = eta + ts*deta;
-
-    // Publish eta
-    std_msgs::Float32MultiArray eta_msg;
-    std::vector<float> data(eta.data(), eta.data() + eta.size());
-    eta_msg.data = data;
-    consensus_pub.publish(eta_msg);
 
     // Publish position reference
     mrs_msgs::ReferenceStamped pos_msg;
@@ -519,6 +514,12 @@ int main(int argc, char **argv)
     //vel_msg.reference.velocity.y = vr(1,0);
     //vel_msg.reference.velocity.z = vr(2,0);
     //vel_ref_pub.publish(vel_msg);
+    
+    // Publish eta
+    std_msgs::Float32MultiArray eta_msg;
+    std::vector<float> data(eta.data(), eta.data() + eta.size());
+    eta_msg.data = data;
+    consensus_pub.publish(eta_msg);
 
     ros::spinOnce();
 
