@@ -35,6 +35,11 @@ float a = -1/2*b*1/(rho_1 - rho_0);
 float g = b*(rho_1 - 1/2*(rho_1 - rho_0));
 float r = 0.4; // robot minimum containing sphere radius
 float Br = 2*r + clearance; // distance where collisions is assumed to happen
+float m_soft = 1.5; // soft constraint allowed standard deviations
+float m_hard = 2.3263; // hard constraint allowed standard deviations
+int ros_rate = 10; // ROS rate
+float ts = 1e-2; //1.0/float(ros_rate); // sampling time
+float Kv = 0.25;
 
 MatrixXf eta(5,1); // formation parameters (phi,sx,sy,tx,ty)
 MatrixXf deta(5,1); // formation parameter derivative
@@ -46,17 +51,9 @@ MatrixXf c_obst(2,2);
 MatrixXf r_obst(2,1);
 MatrixXf R90(2,2); 
 
-int arraySize = 5;
 const char* uavName = std::getenv("UAV_NAME"); // load UAV_NAME environment variable
 std::string uavNameString(uavName); // convert uavName to a string
 int uavNum = uavNameString[3] - '0'; // extract uav number
-
-int ros_rate = 10; // ROS rate
-float ts = 1e-2; //1.0/float(ros_rate); // sampling time
-
-float alpha = 0.25; // Exponential moving average filter coefficient
-
-float Kv = 0.25;
 
 // Subscriber callback for getting joypad values
 void joyCallback(const std_msgs::Int32MultiArray::ConstPtr& msg)
@@ -380,7 +377,6 @@ int main(int argc, char **argv)
   }
 
   // Initialize subscribers for position estimates
-
   ros::Subscriber pos_sub[N];
   for (int i = 0; i < N; i++) {
     auto callback_pos = [&p, &Sigma, i](const nav_msgs::Odometry::ConstPtr& msg) {
@@ -427,9 +423,6 @@ int main(int argc, char **argv)
 
   while (ros::ok())
   {
-
-    float m_soft = 1.5; // soft constraint allowed standard deviations
-    float m_hard = 2.3263; // hard constraint allowed standard deviations
 
     // Generate soft scaling constraint
     Eigen::Matrix <float, 3, 2> A_soft;
