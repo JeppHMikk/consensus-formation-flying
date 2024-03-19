@@ -26,20 +26,16 @@ using namespace std;
 using namespace Eigen;
 
 int N;
-float clearance = 2;
-float max_vel = 10.0;
-float rho_0 = 2.0;
-float rho_1 = 5.0;
-float b = max_vel + 1.0;
-float a = -1/2*b*1/(rho_1 - rho_0);
-float g = b*(rho_1 - 1/2*(rho_1 - rho_0));
-float r = 0.4; // robot minimum containing sphere radius
-float Br = 2*r + clearance; // distance where collisions is assumed to happen
-float m_soft = 1.5; // soft constraint allowed standard deviations
-float m_hard = 2.3263; // hard constraint allowed standard deviations
-int ros_rate = 10; // ROS rate
-float ts = 1e-2; //1.0/float(ros_rate); // sampling time
-float Kv = 0.25;
+float clearance; // = 2;
+float max_vel; // = 20;
+float rho_0; // = 2.0;
+float rho_1; // = 5.0;
+float r; // = 0.4; // robot minimum containing sphere radius
+float m_soft; // = 1.5; // soft constraint allowed standard deviations
+float m_hard; // = 2.3263; // hard constraint allowed standard deviations
+int ros_rate; // = 10; // ROS rate
+float ts; // = 1e-2; //1.0/float(ros_rate); // sampling time
+float Kv; // = 0.25;
 
 MatrixXf eta(5,1); // formation parameters (phi,sx,sy,tx,ty)
 MatrixXf deta(5,1); // formation parameter derivative
@@ -49,7 +45,6 @@ MatrixXf deta_rep(5,1);
 MatrixXd joy_val(6,1); // joypad values
 MatrixXf c_obst(2,2);
 MatrixXf r_obst(2,1);
-MatrixXf R90(2,2); 
 
 const char* uavName = std::getenv("UAV_NAME"); // load UAV_NAME environment variable
 std::string uavNameString(uavName); // convert uavName to a string
@@ -61,13 +56,12 @@ void joyCallback(const std_msgs::Int32MultiArray::ConstPtr& msg)
   deta_joy << 2*(float(msg->data[4])/32767.0 - float(msg->data[5])/32767.0),
               4*float(msg->data[0])/32767.0,
               -4*float(msg->data[1])/32767.0,
-              5*float(msg->data[2])/32767.0,
-              -5*float(msg->data[3])/32767.0;
+              10*float(msg->data[2])/32767.0,
+              -10*float(msg->data[3])/32767.0;
 }
 
 void etaCallback(Eigen::Matrix<float, 5, 1>* eta_ptr, const std_msgs::Float32MultiArray::ConstPtr& msg){
   for(int i = 0; i < 5; i++){
-    //(*eta_ptr)(i,id) = msg->data[i];
     (*eta_ptr)(i,0) = msg->data[i];
   }
 }
@@ -144,7 +138,7 @@ Eigen::MatrixXf refVel(Eigen::MatrixXf eta_in, Eigen::MatrixXf deta_in, Eigen::M
 }
 
 // Repulsive potential for collision avoidance
-Eigen::MatrixXf repPot(Eigen::MatrixXf p_in){
+Eigen::MatrixXf repPot(Eigen::MatrixXf p_in, float a, float b, float rho_0, float rho_1){
   Eigen::Matrix <float, 2, 1> v_rep;
   v_rep << 0,
            0;
@@ -171,10 +165,9 @@ Eigen::MatrixXf v2deta(Eigen::MatrixXf v, Eigen::MatrixXf eta_in, Eigen::MatrixX
   return deta;
 }
 
+/*
 // CDF for normal distribution
 float normalCDF(float x, float mu, float sigma){
-  cout << 0.5*(1.0 + erf((x-mu)/(sigma*sqrt(2.0)))) << endl;
-  cout << "--------------" << endl;
   return 0.5*(1.0 + erf((x-mu)/(sigma*sqrt(2.0))));
 }
 
@@ -190,9 +183,10 @@ float colProb(Eigen::MatrixXf p1, Eigen::MatrixXf p2, Eigen::MatrixXf Sigma1, Ei
   float p_col = normalCDF(Br,mu_proj(0,0),sqrt(sigma_proj(0,0)));
   return p_col;
 }
+*/
 
 // Function for generating linear constraint for collision avoidance
-tuple<Eigen::MatrixXf, float> genConst(Eigen::MatrixXf s, Eigen::MatrixXf Sigmai, Eigen:: MatrixXf Sigmaj, Eigen:: MatrixXf Ci, Eigen::MatrixXf Cj, float m){
+tuple<Eigen::MatrixXf, float> genConst(Eigen::MatrixXf s, Eigen::MatrixXf Sigmai, Eigen:: MatrixXf Sigmaj, Eigen:: MatrixXf Ci, Eigen::MatrixXf Cj, float m, float Br){
   // Find robot distance covariance matrix
   Eigen::MatrixXf Sigmaij = Sigmai + Sigmaj;
   // Calculate largest eigenvalue of distance covariance matrix
@@ -213,7 +207,7 @@ tuple<Eigen::MatrixXf, float> genConst(Eigen::MatrixXf s, Eigen::MatrixXf Sigmai
   return make_tuple(a_ij,b_ij);
 }
 
-// Function for calculating smallest element and index for Eigen vector 
+// Function for calculating smallest element and index for vector 
 tuple<float, int> smEl(Eigen::VectorXf x){
   int M = x.rows();
   int sm_id = 0;
@@ -309,9 +303,27 @@ Eigen::MatrixXf projScale(Eigen::MatrixXf s, Eigen::MatrixXf A, Eigen::MatrixXf 
       }
     }
   }
-
   return s0;
+}
 
+// Function for generating base configuration
+vector<Eigen::MatrixXf> genBaseConfig(int N, float width, float height){
+  vector<MatrixXf> C(N);
+  if(N > width*height){
+    throw std::invalid_argument("Number of drones must be less than width times height");
+  }
+  else{
+    int iter = 0;
+    for(int i=0; i<width; i++){
+      for(int j=0; j<height; j++){
+        C[iter] = Eigen::MatrixXf::Zero(2,1);
+        C[iter](0,0) = float(i) - (width-1)/2;
+        C[iter](1,0) = float(j) - (height-1)/2;
+        iter = iter + 1;
+      }
+    }
+  }
+  return C;
 }
 
 int main(int argc, char **argv)
@@ -321,26 +333,38 @@ int main(int argc, char **argv)
   ros::init(argc, argv, uavNameString + "_consensus_node");
   ros::NodeHandle n;
 
+  // Load ROS parameters
   ros::param::get("/N", N);
+  ros::param::get("/clearance", clearance);
+  ros::param::get("/max_vel", max_vel);
+  ros::param::get("/rho_0", rho_0);
+  ros::param::get("/rho_1", rho_1);
+  ros::param::get("/r", r);
+  ros::param::get("/m_soft", m_soft);
+  ros::param::get("/m_hard", m_hard);
+  ros::param::get("/ros_rate", ros_rate);
+  ros::param::get("/ts", ts);
+  ros::param::get("/Kv", Kv);
 
+  // Calculate parameters for collision avoidance
+  float b = max_vel + 1.0;
+  float a = -1/2*b*1/(rho_1 - rho_0);
+  float g = b*(rho_1 - 1/2*(rho_1 - rho_0));
+  float Br = 2*r + clearance; // distance where collisions is assumed to happen
+
+  // Initialize position estimate, position estimate covariance, and neighbour parameters
   vector<Matrix<float, 3, 1>> p(N); // position estimate
   vector<Matrix<float, 3, 3>> Sigma(N); // position estimate covariance
   vector<Matrix<float, 5, 1>> eta_N(N);
-  vector<Matrix<float, 2, 1>> C(N); // base configuration
 
-  R90 << 0, -1, 1, 0;
+  // Initialize base configuration
+  vector<MatrixXf> C = genBaseConfig(N,2,2);
 
   // Initialise obstacle positions
   c_obst.col(0) << 10, 30;
   r_obst(0,0) = 2;
   c_obst.col(1) << -10, 30;
   r_obst(1,0) = 2;
-
-  // Initialize base configuration
-  C[0] << 1, 1;
-  C[1] << -1, 1;
-  C[2] << -1, -1;
-  C[3] << 1, -1;
 
   // Fill eta with random numbers
   /*
@@ -353,7 +377,7 @@ int main(int argc, char **argv)
   }
   */
   // Initialize eta
-  eta << 0, 5, 5, 0, 0;
+  eta << 0, 10, 10, 0, 0;
   for(int i=0; i<N; i++){
     eta_N[i] = eta;
   }
@@ -430,7 +454,7 @@ int main(int argc, char **argv)
     int iter = 0;
     for(int i=0; i<4; i++){
       if(i != (uavNum-1)){
-        auto const_ij = genConst(eta.block(1,0,2,1), Sigma[i].block(0,0,2,2), Sigma[uavNum-1].block(0,0,2,2), C[i], C[uavNum-1], m_soft);
+        auto const_ij = genConst(eta.block(1,0,2,1), Sigma[i].block(0,0,2,2), Sigma[uavNum-1].block(0,0,2,2), C[i], C[uavNum-1], m_soft, Br);
         A_soft.row(iter) << get<0>(const_ij).transpose();
         b_soft(iter,0) = get<1>(const_ij);
         iter += 1;
@@ -443,7 +467,7 @@ int main(int argc, char **argv)
     iter = 0;
     for(int i=0; i<4; i++){
       if(i != (uavNum-1)){
-        auto const_ij = genConst(eta.block(1,0,2,1), Sigma[i].block(0,0,2,2), Sigma[uavNum-1].block(0,0,2,2), C[i], C[uavNum-1], m_hard);
+        auto const_ij = genConst(eta.block(1,0,2,1), Sigma[i].block(0,0,2,2), Sigma[uavNum-1].block(0,0,2,2), C[i], C[uavNum-1], m_hard, Br);
         A_hard.row(iter) << get<0>(const_ij).transpose();
         b_hard(iter,0) = get<1>(const_ij);
         iter += 1;
@@ -461,7 +485,7 @@ int main(int argc, char **argv)
     marker_pub2.publish(marker);
 
     // Repulsive potential
-    deta_rep = v2deta(repPot(p[uavNum-1]),eta,C[uavNum-1]);
+    deta_rep = v2deta(repPot(p[uavNum-1],a,b,rho_0,rho_1),eta,C[uavNum-1]);
 
     // Consensus step
     deta_N.setZero();

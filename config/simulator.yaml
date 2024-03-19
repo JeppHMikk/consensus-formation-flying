@@ -44,8 +44,8 @@ uav_names: [
 uav1:
   type: "x500"
   spawn:
-    x: 5.0
-    y: 5.0
+    x: -5.0
+    y: -5.0
     z: 2.0
     heading: 0
 
@@ -60,7 +60,7 @@ uav2:
 uav3:
   type: "x500"
   spawn:
-    x: -5.0
+    x: 5.0
     y: -5.0
     z: 2.0
     heading: 0
@@ -69,7 +69,7 @@ uav4:
   type: "x500"
   spawn:
     x: 5.0
-    y: -5.0
+    y: 5.0
     z: 2.0
     heading: 0
 
