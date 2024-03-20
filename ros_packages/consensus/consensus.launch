@@ -1,0 +1,12 @@
+<launch>
+
+    <rosparam file="$(find consensus)/config/parameters.yaml" />
+
+    <!-- Launch the node with dynamically set name -->
+    <node
+        pkg="consensus"
+        type="consensus"
+        name="$(arg node_name)"
+    />
+
+</launch>
