@@ -1,8 +1,0 @@
-prefix=/home/jeppe/consensus-formation-flying/ros_ws/devel
-
-Name: joy_reader
-Description: Description of joy_reader
-Version: 0.0.0
-Cflags: 
-Libs: -L${prefix}/lib 
-Requires: 
