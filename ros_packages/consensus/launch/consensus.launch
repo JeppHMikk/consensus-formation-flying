@@ -1,0 +1,14 @@
+<launch>
+
+    <arg name="UAV_NAME" default="$(optenv UAV_NAME)" />
+
+
+    <!-- Launch the node with dynamically set name -->
+    <group ns="$(arg UAV_NAME)">
+        <node pkg="consensus" type="consensus" name="consensus">
+
+          <rosparam file="$(find consensus)/config/parameters.yaml" />
+        </node>
+    </group>
+
+</launch>

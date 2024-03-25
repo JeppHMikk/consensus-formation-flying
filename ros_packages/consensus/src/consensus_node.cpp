@@ -47,9 +47,9 @@ MatrixXd joy_val(6,1); // joypad values
 MatrixXf c_obst(2,2);
 MatrixXf r_obst(2,1);
 
-const char* uavName = std::getenv("UAV_NAME"); // load UAV_NAME environment variable
+const char* uavName = std::getenv("UAV_NAME"); // load UAV_NAME environment variable, FIXME: load UAV name from launch file
 std::string uavNameString(uavName); // convert uavName to a string
-int uavNum = uavNameString[3] - '0'; // extract uav number
+int uavNum = uavNameString[3] - '0'; // extract uav number FIXME: the uavNum should be determined based on config file and specified list of UAVs involved in the experiment 
 
 // Subscriber callback for getting joypad values
 void joyCallback(const std_msgs::Int32MultiArray::ConstPtr& msg)
@@ -335,18 +335,18 @@ int main(int argc, char **argv)
   ros::NodeHandle n;
 
   // Load ROS parameters
-  ros::param::get("/N", N);
-  ros::param::get("/clearance", clearance);
-  ros::param::get("/max_vel", max_vel);
-  ros::param::get("/rho_0", rho_0);
-  ros::param::get("/rho_1", rho_1);
-  ros::param::get("/r", r);
-  ros::param::get("/m_soft", m_soft);
-  ros::param::get("/m_hard", m_hard);
-  ros::param::get("/ros_rate", ros_rate);
-  ros::param::get("/ts", ts);
-  ros::param::get("/Kv", Kv);
-  ros::param::get("/lambda", lambda);
+  ros::param::get("~N", N);
+  ros::param::get("~clearance", clearance);
+  ros::param::get("~max_vel", max_vel);
+  ros::param::get("~rho_0", rho_0);
+  ros::param::get("~rho_1", rho_1);
+  ros::param::get("~r", r);
+  ros::param::get("~m_soft", m_soft);
+  ros::param::get("~m_hard", m_hard);
+  ros::param::get("~ros_rate", ros_rate);
+  ros::param::get("~ts", ts);
+  ros::param::get("~Kv", Kv);
+  ros::param::get("~lambda", lambda);
 
   // Calculate parameters for collision avoidance
   float b = max_vel + 1.0;
@@ -388,7 +388,7 @@ int main(int argc, char **argv)
   ros::Publisher consensus_pub = n.advertise<std_msgs::Float32MultiArray>("/" + uavNameString + "/eta", 1);
 
   // Initialize subscriber to joypad publisher
-  ros::Subscriber joy_sub = n.subscribe("joy_value", 1, joyCallback);
+  ros::Subscriber joy_sub = n.subscribe("/joy_value", 1, joyCallback);
 
   // Initialize subscribers for consensus
   ros::Subscriber consensus[N];
@@ -398,7 +398,7 @@ int main(int argc, char **argv)
       auto callback = [&eta_N, i](const std_msgs::Float32MultiArray::ConstPtr& msg) {
         etaCallback(&eta_N[i], msg);
       };
-      consensus[i] = n.subscribe<std_msgs::Float32MultiArray>("uav"+to_string(i+1)+"/eta", 1, callback);
+      consensus[i] = n.subscribe<std_msgs::Float32MultiArray>("/uav"+to_string(i+1)+"/eta", 1, callback);
     }
   }
 
@@ -408,21 +408,21 @@ int main(int argc, char **argv)
     auto callback_pos = [&p, &Sigma, i](const nav_msgs::Odometry::ConstPtr& msg) {
       posCallback(&p[i], &Sigma[i], msg);
     };
-    pos_sub[i] = n.subscribe<nav_msgs::Odometry>("uav" + to_string(i+1) + "/estimation_manager/odom_main", 1, callback_pos);
+    pos_sub[i] = n.subscribe<nav_msgs::Odometry>("/uav" + to_string(i+1) + "/estimation_manager/odom_main", 1, callback_pos); // FIXME: the odometry topic should be parametrizable
   }
 
   // Initialize velocity reference publisher
-  ros::Publisher vel_ref_pub = n.advertise<mrs_msgs::VelocityReferenceStamped>(uavNameString+"/control_manager/velocity_reference", 1);
+  ros::Publisher vel_ref_pub = n.advertise<mrs_msgs::VelocityReferenceStamped>("/" + uavNameString + "/control_manager/velocity_reference", 1);
 
   // Initialize position reference publisher
-  ros::Publisher pos_ref_pub = n.advertise<mrs_msgs::ReferenceStamped>(uavNameString+"/control_manager/reference", 1);
+  ros::Publisher pos_ref_pub = n.advertise<mrs_msgs::ReferenceStamped>("/" + uavNameString + "/control_manager/reference", 1);
 
   // Initialize cylinder obstacle marker publisher
-  ros::Publisher marker_pub1 = n.advertise<visualization_msgs::Marker>("visualization_marker_1", 1);
-  ros::Publisher marker_pub2 = n.advertise<visualization_msgs::Marker>("visualization_marker_2", 1);
+  ros::Publisher marker_pub1 = n.advertise<visualization_msgs::Marker>("/visualization_marker_1", 1);
+  ros::Publisher marker_pub2 = n.advertise<visualization_msgs::Marker>("/visualization_marker_2", 1);
   uint32_t shape = visualization_msgs::Marker::CYLINDER; // Set shape of marker
   visualization_msgs::Marker marker;
-  marker.header.frame_id = "simulator_origin";
+  marker.header.frame_id = "simulator_origin"; // FIXME: set this as parameter, it won;t be simulator origin in the real world
   marker.header.stamp = ros::Time::now();
   marker.ns = "obstacle";
   marker.id = 0;
