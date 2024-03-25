@@ -51,6 +51,7 @@ input=(
 '
   'Consensus' 'waitForHw; roslaunch consensus consensus.launch
 '
+  'Activation' 'rosservice call /consensus/activation'
   'tf_connector' 'waitForTime; roslaunch mrs_tf_connector tf_connector.launch custom_config:=./config/tf_connector.yaml
 '
 # do NOT modify the command list below
