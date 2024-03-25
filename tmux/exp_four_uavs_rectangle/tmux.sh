@@ -49,7 +49,9 @@ input=(
 '
   'AutoStart' 'waitForHw; roslaunch mrs_uav_autostart automatic_start.launch
 '
-  'AutoStart' 'waitForHw; roslaunch consensus consensus.launch
+  'Consensus' 'waitForHw; roslaunch consensus consensus.launch
+'
+  'tf_connector' 'waitForTime; roslaunch mrs_tf_connector tf_connector.launch custom_config:=./config/tf_connector.yaml
 '
 # do NOT modify the command list below
   'EstimDiag' 'waitForHw; rostopic echo /'"$UAV_NAME"'/estimation_manager/diagnostics
