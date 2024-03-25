@@ -26,7 +26,7 @@ while getopts "g:l:n" options; do
 done
 
 [ -z "$WORKSPACE_LOCATION" ] && WORKSPACE_LOCATION="$HOME"
-[ -z "$GIT_PATH" ] && GIT_PATH="$HOME"
+[ -z "$GIT_PATH" ] && GIT_PATH="$HOME/git"
 
 # get the path to this script
 APP_PATH=`dirname "$0"`
@@ -62,9 +62,9 @@ command catkin profile set reldeb
 [ ! -z "$GITHUB_CI" ] && command catkin profile set debug
 
 echo "$0: linking ros packages to $WORKSPACE_LOCATION/$WORKSPACE"
-echo "$GIT_PATH/consensus-formation-flying/ros_packages"
+echo "$GIT_PATH/consensus-formation-flying"
 cd $WORKSPACE_PATH/src
-ln -sf $GIT_PATH/consensus-formation-flying/ros_packages
+ln -sf $GIT_PATH/consensus-formation-flying
 
 echo "$0: building $WORKSPACE_PATH"
 cd $WORKSPACE_PATH
