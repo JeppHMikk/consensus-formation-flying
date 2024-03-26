@@ -8,10 +8,15 @@ project(consensus)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
+  nodelet
   mrs_msgs
   roscpp
   rospy
   cmake_modules
+  std_msgs
+  geometry_msgs
+  nav_msgs
+  mrs_lib
 )
 
 find_package(Eigen REQUIRED)

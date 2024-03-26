@@ -11,6 +11,7 @@
 #include "geometry_msgs/Point.h"
 #include "visualization_msgs/Marker.h"
 #include <std_srvs/Trigger.h>
+#include <mrs_lib/transformer.h>
 
 #include <sstream>
 #include <random>
@@ -22,6 +23,25 @@
 #include <vector>
 #include <functional>
 #include <boost/bind.hpp>
+
+// messages
+#include <mrs_msgs/ReferenceStampedSrv.h>
+#include <mrs_msgs/Reference.h>
+#include <mrs_msgs/TrackerCommand.h>
+#include <nav_msgs/Odometry.h>
+#include <geometry_msgs/PoseArray.h>
+#include <std_msgs/String.h>
+#include <std_srvs/Trigger.h>
+
+// custom helper functions from mrs library
+#include <mrs_lib/param_loader.h>
+#include <mrs_lib/subscribe_handler.h>
+#include <mrs_lib/publisher_handler.h>
+#include <mrs_lib/mutex.h>
+#include <mrs_lib/attitude_converter.h>
+#include <mrs_lib/msg_extractor.h>
+#include <mrs_lib/geometry/misc.h>
+#include <mrs_lib/transformer.h>
 
 using namespace std;
 using namespace Eigen;
@@ -42,6 +62,8 @@ bool all_robots_positions_valid_ = false;
 bool control_allowed_ = false;
 string uavName; 
 int uavNum = std::stoi(std::getenv("UAV_NUM"));
+string _est_frame_;
+string _control_frame_;
 
 MatrixXf eta(5,1); // formation parameters (phi,sx,sy,tx,ty)
 MatrixXf deta(5,1); // formation parameter derivative
@@ -355,6 +377,8 @@ int main(int argc, char **argv)
   ros::init(argc, argv, "consensus_node_" + uavNum);
   ros::NodeHandle n;
 
+  std::shared_ptr<mrs_lib::Transformer> transformer_;
+
   // Load ROS parameters
   ros::param::get("~N", N);
   ros::param::get("~clearance", clearance);
@@ -368,6 +392,8 @@ int main(int argc, char **argv)
   ros::param::get("~ts", ts);
   ros::param::get("~Kv", Kv);
   ros::param::get("~lambda", lambda);
+  ros::param::get("~est_frame", _est_frame_);
+  ros::param::get("~control_frame", _control_frame_);
 
   std::vector<std::string> UAV_names;  
   ros::param::get("~UAV_names", UAV_names);
@@ -451,7 +477,7 @@ int main(int argc, char **argv)
   ros::Publisher marker_pub2 = n.advertise<visualization_msgs::Marker>("/visualization_marker_2", 1);
   uint32_t shape = visualization_msgs::Marker::CYLINDER; // Set shape of marker
   visualization_msgs::Marker marker;
-  marker.header.frame_id = "simulator_origin"; // FIXME: set this as parameter, it won;t be simulator origin in the real world
+  marker.header.frame_id = _est_frame_; // FIXME: set this as parameter, it won;t be simulator origin in the real world
   marker.header.stamp = ros::Time::now();
   marker.ns = "obstacle";
   marker.id = 0;
@@ -552,10 +578,27 @@ int main(int argc, char **argv)
       eta = eta + ts*deta;
 
       // Publish position reference
+      /*
+      geometry_msgs::PointStamped pos_ref;
+      pos_ref.header.frame_id = _est_frame_;
+      pos_ref.point.x = pr(0,0);
+      pos_ref.point.y = pr(1,0);
+      pos_ref.point.z = pr(2,0);
+      auto res = transformer_->transformSingle(pos_ref, _control_frame_);
+      if (res) {
+        pos_ref = res.value();
+        mrs_msgs::ReferenceStamped pos_msg;
+        pos_msg.reference.position = pos_ref.point;
+        pos_msg.header.frame_id = _control_frame_;
+        pos_ref_pub.publish(pos_msg);
+      }
+      */
+
       mrs_msgs::ReferenceStamped pos_msg;
       pos_msg.reference.position.x = pr(0,0);
       pos_msg.reference.position.y = pr(1,0);
       pos_msg.reference.position.z = pr(2,0);
+      pos_msg.header.frame_id = _control_frame_;
       pos_ref_pub.publish(pos_msg);
 
       // Publish velocity reference

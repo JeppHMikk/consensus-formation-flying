@@ -1,3 +1,5 @@
+est_frame: simulator_origin
+control_frame: simulator_origin
 N: 4
 clearance: 3
 max_vel: 30
