@@ -62,10 +62,17 @@ windows:
       layout: tiled
       panes:
         #- waitForRos; rosparam set N 4
-        - waitForTakeoff; export UAV_NAME=uav1; roslaunch consensus consensus.launch
-        - waitForTakeoff; export UAV_NAME=uav2; roslaunch consensus consensus.launch
-        - waitForTakeoff; export UAV_NAME=uav3; roslaunch consensus consensus.launch
-        - waitForTakeoff; export UAV_NAME=uav4; roslaunch consensus consensus.launch
+        - waitForRos; export UAV_NAME=uav1; roslaunch consensus consensus.launch
+        - waitForRos; export UAV_NAME=uav2; roslaunch consensus consensus.launch
+        - waitForRos; export UAV_NAME=uav3; roslaunch consensus consensus.launch
+        - waitForRos; export UAV_NAME=uav4; roslaunch consensus consensus.launch
+  - activate:
+      layout: tiled
+      panes:
+        - waitForTakeoff; rosservice call /uav1/activate
+        - waitForTakeoff; rosservice call /uav2/activate
+        - waitForTakeoff; rosservice call /uav3/activate
+        - waitForTakeoff; rosservice call /uav4/activate
   #- recording:
   #    layout: tiled
   #    panes:

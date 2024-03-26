@@ -10,6 +10,7 @@
 #include "geometry_msgs/PoseWithCovariance.h"
 #include "geometry_msgs/Point.h"
 #include "visualization_msgs/Marker.h"
+#include <std_srvs/Trigger.h>
 
 #include <sstream>
 #include <random>
@@ -37,6 +38,8 @@ int ros_rate; // = 10; // ROS rate
 float ts; // = 1e-2; //1.0/float(ros_rate); // sampling time
 float Kv; // = 0.25;
 float lambda;
+bool all_robots_positions_valid_ = false;
+bool control_allowed_ = false;
 
 MatrixXf eta(5,1); // formation parameters (phi,sx,sy,tx,ty)
 MatrixXf deta(5,1); // formation parameter derivative
@@ -67,6 +70,25 @@ void etaCallback(Eigen::Matrix<float, 5, 1>* eta_ptr, const std_msgs::Float32Mul
   }
 }
 
+bool activationServiceCallback(std_srvs::Trigger::Request& req, std_srvs::Trigger::Response& res) {
+  // service for activation of planning
+  ROS_INFO("[FormationController]: Activation service called.");
+  res.success = true;
+  if (control_allowed_) {
+    res.message = "Control was already allowed.";
+    //ROS_WARN("[FormationController]: %s", res.message.c_str());
+  } else if (!all_robots_positions_valid_) {
+    res.message = "Robots are not ready, control cannot be activated.";
+    //ROS_WARN("[FormationController]: %s", res.message.c_str());
+    res.success = false;
+  } else {
+    control_allowed_ = true;
+    res.message = "Control allowed.";
+    //ROS_INFO("[FormationController]: %s", res.message.c_str());
+  }
+  return res.success;
+}
+
 // Subscriber callback for getting position estimates
 void posCallback(Eigen::Matrix<float, 3, 1>* p_ptr, Eigen::Matrix<float, 3, 3>* Sigma_ptr, const nav_msgs::Odometry::ConstPtr& msg) {
     // extract position from message
@@ -81,6 +103,7 @@ void posCallback(Eigen::Matrix<float, 3, 1>* p_ptr, Eigen::Matrix<float, 3, 3>* 
         }
     }
     (*Sigma_ptr) << Sigma_msg.block(0,0,3,3);
+    all_robots_positions_valid_ = true;
 }
 
 // Function for generation random float
@@ -384,6 +407,9 @@ int main(int argc, char **argv)
     eta_N[i] = eta;
   }
   
+  // Initialize drone activation service
+  ros::ServiceServer activation_service = n.advertiseService("/" + uavNameString + "/activate", activationServiceCallback);
+
   // Initialize publisher for consensus
   ros::Publisher consensus_pub = n.advertise<std_msgs::Float32MultiArray>("/" + uavNameString + "/eta", 1);
 
@@ -447,34 +473,7 @@ int main(int argc, char **argv)
   // Set rate of loop
   ros::Rate loop_rate(ros_rate);
 
-  while (ros::ok())
-  {
-
-    // Generate soft scaling constraint
-    Eigen::Matrix <float, 3, 2> A_soft;
-    Eigen::Matrix <float, 3, 1> b_soft;
-    int iter = 0;
-    for(int i=0; i<4; i++){
-      if(i != (uavNum-1)){
-        auto const_ij = genConst(eta.block(1,0,2,1), Sigma[i].block(0,0,2,2), Sigma[uavNum-1].block(0,0,2,2), C[i], C[uavNum-1], m_soft, Br);
-        A_soft.row(iter) << get<0>(const_ij).transpose();
-        b_soft(iter,0) = get<1>(const_ij);
-        iter += 1;
-      }
-    }
-
-    // Generate hard scaling constraint
-    Eigen::Matrix <float, 3, 2> A_hard;
-    Eigen::Matrix <float, 3, 1> b_hard;
-    iter = 0;
-    for(int i=0; i<4; i++){
-      if(i != (uavNum-1)){
-        auto const_ij = genConst(eta.block(1,0,2,1), Sigma[i].block(0,0,2,2), Sigma[uavNum-1].block(0,0,2,2), C[i], C[uavNum-1], m_hard, Br);
-        A_hard.row(iter) << get<0>(const_ij).transpose();
-        b_hard(iter,0) = get<1>(const_ij);
-        iter += 1;
-      }
-    }
+    while (ros::ok()){
 
     // Publish obstacle markers
     marker.pose.position.x = c_obst(0,0);
@@ -486,59 +485,87 @@ int main(int argc, char **argv)
     marker.pose.position.z = 5;
     marker_pub2.publish(marker);
 
-    // Repulsive potential
-    deta_rep = v2deta(repPot(p[uavNum-1],a,b,rho_0,rho_1),eta,C[uavNum-1]);
-
-    // Consensus step
-    deta_N.setZero();
-    for(int i=0; i<N; i++){
-      if(i != uavNum-1){
-        deta_N = deta_N + lambda*(eta_N[i] - eta);
+    if(control_allowed_ & all_robots_positions_valid_){
+      // Generate soft scaling constraint
+      Eigen::Matrix <float, 3, 2> A_soft;
+      Eigen::Matrix <float, 3, 1> b_soft;
+      int iter = 0;
+      for(int i=0; i<4; i++){
+        if(i != (uavNum-1)){
+          auto const_ij = genConst(eta.block(1,0,2,1), Sigma[i].block(0,0,2,2), Sigma[uavNum-1].block(0,0,2,2), C[i], C[uavNum-1], m_soft, Br);
+          A_soft.row(iter) << get<0>(const_ij).transpose();
+          b_soft(iter,0) = get<1>(const_ij);
+          iter += 1;
+        }
       }
+
+      // Generate hard scaling constraint
+      Eigen::Matrix <float, 3, 2> A_hard;
+      Eigen::Matrix <float, 3, 1> b_hard;
+      iter = 0;
+      for(int i=0; i<4; i++){
+        if(i != (uavNum-1)){
+          auto const_ij = genConst(eta.block(1,0,2,1), Sigma[i].block(0,0,2,2), Sigma[uavNum-1].block(0,0,2,2), C[i], C[uavNum-1], m_hard, Br);
+          A_hard.row(iter) << get<0>(const_ij).transpose();
+          b_hard(iter,0) = get<1>(const_ij);
+          iter += 1;
+        }
+      }
+
+      // Repulsive potential
+      deta_rep = v2deta(repPot(p[uavNum-1],a,b,rho_0,rho_1),eta,C[uavNum-1]);
+
+      // Consensus step
+      deta_N.setZero();
+      for(int i=0; i<N; i++){
+        if(i != uavNum-1){
+          deta_N = deta_N + lambda*(eta_N[i] - eta);
+        }
+      }
+
+      // Perform soft projection step
+      MatrixXf s_proj_soft = projScale(eta.block(1,0,2,1), A_soft, b_soft);
+      MatrixXf deta_soft = Eigen::MatrixXf::Zero(5,1);
+      if((!isnan(s_proj_soft.array())).all()){
+        deta_soft.block(1,0,2,1) = 0.2*(s_proj_soft - eta.block(1,0,2,1));
+      }
+
+      // Calculate parameter derivative
+      deta = deta_joy + deta_N + deta_rep; // + deta_soft;
+
+      // Perform hard projection step
+      MatrixXf s_proj_hard = projScale(eta.block(1,0,2,1)+deta.block(1,0,2,1), A_hard, b_hard);
+      if((!isnan(s_proj_hard.array())).all()){
+        deta.block(1,0,2,1) = s_proj_hard - eta.block(1,0,2,1);
+      }
+
+      // Calculate reference position and velocity
+      Eigen::MatrixXf vr = refVel(eta,deta,C[uavNum-1]);
+      Eigen::MatrixXf pr = refPos(eta,C[uavNum-1]);
+
+      // Update eta
+      eta = eta + ts*deta;
+
+      // Publish position reference
+      mrs_msgs::ReferenceStamped pos_msg;
+      pos_msg.reference.position.x = pr(0,0);
+      pos_msg.reference.position.y = pr(1,0);
+      pos_msg.reference.position.z = pr(2,0);
+      pos_ref_pub.publish(pos_msg);
+
+      // Publish velocity reference
+      //mrs_msgs::VelocityReferenceStamped vel_msg;
+      //vel_msg.reference.velocity.x = vr(0,0); 
+      //vel_msg.reference.velocity.y = vr(1,0);
+      //vel_msg.reference.velocity.z = vr(2,0);
+      //vel_ref_pub.publish(vel_msg);
+      
+      // Publish eta
+      std_msgs::Float32MultiArray eta_msg;
+      std::vector<float> data(eta.data(), eta.data() + eta.size());
+      eta_msg.data = data;
+      consensus_pub.publish(eta_msg);
     }
-
-    // Perform soft projection step
-    MatrixXf s_proj_soft = projScale(eta.block(1,0,2,1), A_soft, b_soft);
-    MatrixXf deta_soft = Eigen::MatrixXf::Zero(5,1);
-    if((!isnan(s_proj_soft.array())).all()){
-      deta_soft.block(1,0,2,1) = 0.2*(s_proj_soft - eta.block(1,0,2,1));
-    }
-
-    // Calculate parameter derivative
-    deta = deta_joy + deta_N + deta_rep; // + deta_soft;
-
-    // Perform hard projection step
-    MatrixXf s_proj_hard = projScale(eta.block(1,0,2,1)+deta.block(1,0,2,1), A_hard, b_hard);
-    if((!isnan(s_proj_hard.array())).all()){
-      deta.block(1,0,2,1) = s_proj_hard - eta.block(1,0,2,1);
-    }
-
-    // Calculate reference position and velocity
-    Eigen::MatrixXf vr = refVel(eta,deta,C[uavNum-1]);
-    Eigen::MatrixXf pr = refPos(eta,C[uavNum-1]);
-
-    // Update eta
-    eta = eta + ts*deta;
-
-    // Publish position reference
-    mrs_msgs::ReferenceStamped pos_msg;
-    pos_msg.reference.position.x = pr(0,0);
-    pos_msg.reference.position.y = pr(1,0);
-    pos_msg.reference.position.z = pr(2,0);
-    pos_ref_pub.publish(pos_msg);
-
-    // Publish velocity reference
-    //mrs_msgs::VelocityReferenceStamped vel_msg;
-    //vel_msg.reference.velocity.x = vr(0,0); 
-    //vel_msg.reference.velocity.y = vr(1,0);
-    //vel_msg.reference.velocity.z = vr(2,0);
-    //vel_ref_pub.publish(vel_msg);
-    
-    // Publish eta
-    std_msgs::Float32MultiArray eta_msg;
-    std::vector<float> data(eta.data(), eta.data() + eta.size());
-    eta_msg.data = data;
-    consensus_pub.publish(eta_msg);
 
     ros::spinOnce();
 
@@ -548,3 +575,4 @@ int main(int argc, char **argv)
 
   return 0;
 }
+
