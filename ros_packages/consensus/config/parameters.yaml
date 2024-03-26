@@ -10,3 +10,4 @@ ros_rate : 10
 ts : 0.01
 Kv : 0.25
 lambda: 10
+UAV_names: [uav1, uav2, uav3, uav4]

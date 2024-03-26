@@ -40,6 +40,8 @@ float Kv; // = 0.25;
 float lambda;
 bool all_robots_positions_valid_ = false;
 bool control_allowed_ = false;
+string uavName; 
+int uavNum = std::stoi(std::getenv("UAV_NUM"));
 
 MatrixXf eta(5,1); // formation parameters (phi,sx,sy,tx,ty)
 MatrixXf deta(5,1); // formation parameter derivative
@@ -49,10 +51,6 @@ MatrixXf deta_rep(5,1);
 MatrixXd joy_val(6,1); // joypad values
 MatrixXf c_obst(2,2);
 MatrixXf r_obst(2,1);
-
-const char* uavName = std::getenv("UAV_NAME"); // load UAV_NAME environment variable, FIXME: load UAV name from launch file
-std::string uavNameString(uavName); // convert uavName to a string
-int uavNum = uavNameString[3] - '0'; // extract uav number FIXME: the uavNum should be determined based on config file and specified list of UAVs involved in the experiment 
 
 // Subscriber callback for getting joypad values
 void joyCallback(const std_msgs::Int32MultiArray::ConstPtr& msg)
@@ -354,7 +352,7 @@ int main(int argc, char **argv)
 {
 
   // Initialize ROS node
-  ros::init(argc, argv, uavNameString + "_consensus_node");
+  ros::init(argc, argv, "consensus_node_" + uavNum);
   ros::NodeHandle n;
 
   // Load ROS parameters
@@ -370,6 +368,11 @@ int main(int argc, char **argv)
   ros::param::get("~ts", ts);
   ros::param::get("~Kv", Kv);
   ros::param::get("~lambda", lambda);
+
+  std::vector<std::string> UAV_names;  
+  ros::param::get("~UAV_names", UAV_names);
+
+  uavName = UAV_names[uavNum-1];
 
   // Calculate parameters for collision avoidance
   float b = max_vel + 1.0;
@@ -408,10 +411,10 @@ int main(int argc, char **argv)
   }
   
   // Initialize drone activation service
-  ros::ServiceServer activation_service = n.advertiseService("/" + uavNameString + "/activate", activationServiceCallback);
+  ros::ServiceServer activation_service = n.advertiseService("/" + uavName + "/activate", activationServiceCallback);
 
   // Initialize publisher for consensus
-  ros::Publisher consensus_pub = n.advertise<std_msgs::Float32MultiArray>("/" + uavNameString + "/eta", 1);
+  ros::Publisher consensus_pub = n.advertise<std_msgs::Float32MultiArray>("/" + uavName + "/eta", 1);
 
   // Initialize subscriber to joypad publisher
   ros::Subscriber joy_sub = n.subscribe("/joy_value", 1, joyCallback);
@@ -424,7 +427,7 @@ int main(int argc, char **argv)
       auto callback = [&eta_N, i](const std_msgs::Float32MultiArray::ConstPtr& msg) {
         etaCallback(&eta_N[i], msg);
       };
-      consensus[i] = n.subscribe<std_msgs::Float32MultiArray>("/uav"+to_string(i+1)+"/eta", 1, callback);
+      consensus[i] = n.subscribe<std_msgs::Float32MultiArray>("/"+UAV_names[i]+"/eta", 1, callback);
     }
   }
 
@@ -434,14 +437,14 @@ int main(int argc, char **argv)
     auto callback_pos = [&p, &Sigma, i](const nav_msgs::Odometry::ConstPtr& msg) {
       posCallback(&p[i], &Sigma[i], msg);
     };
-    pos_sub[i] = n.subscribe<nav_msgs::Odometry>("/uav" + to_string(i+1) + "/estimation_manager/odom_main", 1, callback_pos); // FIXME: the odometry topic should be parametrizable
+    pos_sub[i] = n.subscribe<nav_msgs::Odometry>("/"+UAV_names[i]+"/estimation_manager/odom_main", 1, callback_pos); // FIXME: the odometry topic should be parametrizable
   }
 
   // Initialize velocity reference publisher
-  ros::Publisher vel_ref_pub = n.advertise<mrs_msgs::VelocityReferenceStamped>("/" + uavNameString + "/control_manager/velocity_reference", 1);
+  ros::Publisher vel_ref_pub = n.advertise<mrs_msgs::VelocityReferenceStamped>("/" + uavName + "/control_manager/velocity_reference", 1);
 
   // Initialize position reference publisher
-  ros::Publisher pos_ref_pub = n.advertise<mrs_msgs::ReferenceStamped>("/" + uavNameString + "/control_manager/reference", 1);
+  ros::Publisher pos_ref_pub = n.advertise<mrs_msgs::ReferenceStamped>("/" + uavName + "/control_manager/reference", 1);
 
   // Initialize cylinder obstacle marker publisher
   ros::Publisher marker_pub1 = n.advertise<visualization_msgs::Marker>("/visualization_marker_1", 1);
@@ -473,7 +476,9 @@ int main(int argc, char **argv)
   // Set rate of loop
   ros::Rate loop_rate(ros_rate);
 
-    while (ros::ok()){
+  while (ros::ok()){
+
+    //ROS_INFO("UAV_name=%s", UAV_names[uavNum-1]);
 
     // Publish obstacle markers
     marker.pose.position.x = c_obst(0,0);

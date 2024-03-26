@@ -5,7 +5,7 @@
 
     <!-- Launch the node with dynamically set name -->
     <group ns="$(arg UAV_NAME)">
-        <node pkg="consensus" type="consensus" name="consensus">
+        <node pkg="consensus" type="consensus" name="consensus" output="screen">
 
           <rosparam file="$(find consensus)/config/parameters.yaml" />
         </node>
