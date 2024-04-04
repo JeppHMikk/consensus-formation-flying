@@ -248,16 +248,18 @@ Eigen::MatrixXf repPot(Eigen::MatrixXf p_in, float a, float b, float rho_0, floa
   Eigen::Matrix <float, 2, 1> v_rep;
   v_rep << 0,
            0;
-  for(int i=0; i < 2; i++){
+  float eta = 1000;
+  float rho_act = 20.0;
+  for(int i=0; i<2; i++){
     float rho = (c_obst.col(i) - p_in.block(0,0,2,1)).norm() - r_obst(i,0) - clearance;
-    Eigen::MatrixXf drho = (p_in.block(0,0,2,1) - c_obst.col(i))/((p_in.block(0,0,2,1) - c_obst.col(i)).norm() + 0.00001);
+    Eigen::MatrixXf drho = (p_in.block(0,0,2,1) - c_obst.col(i))/((p_in.block(0,0,2,1) - c_obst.col(i)).norm());
     float df;
-    if(rho >= rho_1)
+    if(rho >= rho_act){
       df = 0.0;
-    else if(rho >= rho_0 & rho < rho_1)
-      df = 2*a*(rho - rho_0);
-    else
-      df = b;
+    }
+    else{
+      df = eta*(1/(rho + 1/10) - 1/rho_act)*1/(rho*rho);
+    }
     v_rep = v_rep + df*drho;
   }
   return v_rep;
@@ -458,9 +460,9 @@ int main(int argc, char **argv)
   vector<Matrix<float, 2, 1>> C = formationShapeGen();
 
   // Initialise obstacle positions
-  c_obst.col(0) << 10, 30;
+  c_obst.col(0) << -10, 30;
   r_obst(0,0) = 2;
-  c_obst.col(1) << -10, 30;
+  c_obst.col(1) << 10, 30;
   r_obst(1,0) = 2;
 
   // Fill eta with random numbers
