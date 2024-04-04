@@ -58,6 +58,10 @@ windows:
   - joy_reader:
       layout: tiled
       panes: rosrun joy_reader joy_reader
+  - formation_shape:
+      layout: tiled
+      panes:
+        - waitForRos; rosrun formation_shape_publisher formation_shape_publisher
   - consensus:
       layout: tiled
       panes:

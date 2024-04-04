@@ -1,6 +1,9 @@
+#define _USE_MATH_DEFINES
+
 #include "ros/ros.h"
 #include "std_msgs/Int32MultiArray.h"
 #include "std_msgs/Float32MultiArray.h"
+#include "std_msgs/String.h"
 #include "nav_msgs/Odometry.h"
 #include <Eigen/Dense>
 #include <mrs_msgs/VelocityReferenceStamped.h>
@@ -23,26 +26,7 @@
 #include <vector>
 #include <functional>
 #include <boost/bind.hpp>
-
-// messages
-#include <mrs_msgs/ReferenceStampedSrv.h>
-#include <mrs_msgs/Reference.h>
-#include <mrs_msgs/TrackerCommand.h>
-#include <nav_msgs/Odometry.h>
-#include <geometry_msgs/PoseArray.h>
-#include <std_msgs/String.h>
-#include <std_srvs/Trigger.h>
-
-// custom helper functions from mrs library
-#include <mrs_lib/param_loader.h>
-#include <mrs_lib/subscribe_handler.h>
-#include <mrs_lib/publisher_handler.h>
-#include <mrs_lib/mutex.h>
-#include <mrs_lib/attitude_converter.h>
-#include <mrs_lib/msg_extractor.h>
-#include <mrs_lib/geometry/misc.h>
-#include <mrs_lib/transformer.h>
-
+ 
 using namespace std;
 using namespace Eigen;
 
@@ -64,6 +48,9 @@ string uavName;
 int uavNum = std::stoi(std::getenv("UAV_NUM"));
 string _est_frame_;
 string _control_frame_;
+string default_formation_shape = "grid";
+string formation_shape = default_formation_shape;
+bool change_formation_shape = false;
 
 MatrixXf eta(5,1); // formation parameters (phi,sx,sy,tx,ty)
 MatrixXf deta(5,1); // formation parameter derivative
@@ -74,23 +61,8 @@ MatrixXd joy_val(6,1); // joypad values
 MatrixXf c_obst(2,2);
 MatrixXf r_obst(2,1);
 
-// Subscriber callback for getting joypad values
-void joyCallback(const std_msgs::Int32MultiArray::ConstPtr& msg)
-{
-  deta_joy << 2*(float(msg->data[4])/32767.0 - float(msg->data[5])/32767.0),
-              4*float(msg->data[0])/32767.0,
-              -4*float(msg->data[1])/32767.0,
-              10*float(msg->data[2])/32767.0,
-              -10*float(msg->data[3])/32767.0;
-}
-
-void etaCallback(Eigen::Matrix<float, 5, 1>* eta_ptr, const std_msgs::Float32MultiArray::ConstPtr& msg){
-  for(int i = 0; i < 5; i++){
-    (*eta_ptr)(i,0) = msg->data[i];
-  }
-}
-
-bool activationServiceCallback(std_srvs::Trigger::Request& req, std_srvs::Trigger::Response& res) {
+// Service callback for activating robots
+bool activationServiceCallback(std_srvs::Trigger::Request& req, std_srvs::Trigger::Response& res){
   // service for activation of planning
   ROS_INFO("[FormationController]: Activation service called.");
   res.success = true;
@@ -107,6 +79,96 @@ bool activationServiceCallback(std_srvs::Trigger::Request& req, std_srvs::Trigge
     //ROS_INFO("[FormationController]: %s", res.message.c_str());
   }
   return res.success;
+}
+
+// Subscriber callback for getting joypad values
+void joyCallback(const std_msgs::Int32MultiArray::ConstPtr& msg)
+{
+  deta_joy << 2*(float(msg->data[4])/32767.0 - float(msg->data[5])/32767.0),
+              4*float(msg->data[0])/32767.0,
+              -4*float(msg->data[1])/32767.0,
+              10*float(msg->data[2])/32767.0,
+              -10*float(msg->data[3])/32767.0;
+}
+
+void formationShapeCallback(const std_msgs::String::ConstPtr& msg){
+  if(formation_shape.compare(msg->data.c_str()) != 0){
+    formation_shape = msg->data.c_str();
+    change_formation_shape = true;
+  }
+}
+
+vector<Eigen::Matrix<float,2,1>> formationShapeGen(){
+  vector<Eigen::Matrix<float,2,1>> C(N);
+  if(formation_shape.compare("grid") == 0){
+    cout << "grid formation made" << endl;
+    float dm = 1;
+    while(dm*dm < N){
+      dm = dm + 1;
+    }
+    int iter = 0;
+    for(float i=0; i<dm; i++){
+      for(float j=0; j<dm; j++){
+        C[iter](0,0) = i - (dm-1)/2;
+        C[iter](1,0) = j - (dm-1)/2;
+        iter = iter + 1;
+        if(iter >= N){
+          goto end_loops;
+        }
+      }
+    }
+  }
+  else if(formation_shape.compare("line") == 0){
+    cout << "line formation made" << endl;
+    for(int i=0; i<N; i++){
+      C[i](0,0) = float(i) - (float(N)-1)/2;
+      C[i](1,0) = 0.0;
+    }
+  }
+  else if(formation_shape.compare("circle") == 0){
+    float r = N/(2*M_PI);
+    for(int i=0; i<N; i++){
+      float phi_i = float(i)*2*M_PI/N;
+      C[i](0,0) = r*cos(phi_i);
+      C[i](1,0) = r*sin(phi_i);
+    }
+  }
+  else if(formation_shape.compare("triangle") == 0){
+    int iter = 0;
+    Eigen::MatrixXf C_cent = Eigen::MatrixXf::Zero(2,1);
+    for(float i=0; i<N; i++){
+      for(float j=0; j<=i; j++){
+        C[iter](0,0) = j - i/2;
+        C[iter](1,0) = -0.866*i;
+        C_cent = C_cent + C[iter];
+        iter = iter + 1;
+        if(iter >= N){
+          break;
+        }
+      }
+      if(iter >= N){
+        break;
+      }
+    }
+    C_cent = C_cent/N;
+    for(int i=0; i<N; i++){
+      C[iter] = C[iter] - C_cent;
+    }
+  }
+  else{
+    throw std::invalid_argument("Invalid formation shape");
+    formation_shape = default_formation_shape;
+    C = formationShapeGen();
+  }
+  end_loops:
+  return C;
+}
+
+// Subscriber callback for getting formation parameters
+void etaCallback(Eigen::Matrix<float, 5, 1>* eta_ptr, const std_msgs::Float32MultiArray::ConstPtr& msg){
+  for(int i = 0; i < 5; i++){
+    (*eta_ptr)(i,0) = msg->data[i];
+  }
 }
 
 // Subscriber callback for getting position estimates
@@ -265,7 +327,7 @@ tuple<float, int> smEl(Eigen::VectorXf x){
   return make_tuple(sm_el,sm_id);
 }
 
-// Function for projecting scaling variable onto constraint set
+// Function for projecting scaling variable onto constraint set using active-set optimizer
 Eigen::MatrixXf projScale(Eigen::MatrixXf s, Eigen::MatrixXf A, Eigen::MatrixXf b){
 
   MatrixXf s0 = s;
@@ -350,26 +412,6 @@ Eigen::MatrixXf projScale(Eigen::MatrixXf s, Eigen::MatrixXf A, Eigen::MatrixXf 
   return s0;
 }
 
-// Function for generating base configuration
-vector<Eigen::MatrixXf> genBaseConfig(int N, float width, float height){
-  vector<MatrixXf> C(N);
-  if(N > width*height){
-    throw std::invalid_argument("Number of drones must be less than width times height");
-  }
-  else{
-    int iter = 0;
-    for(int i=0; i<width; i++){
-      for(int j=0; j<height; j++){
-        C[iter] = Eigen::MatrixXf::Zero(2,1);
-        C[iter](0,0) = float(i) - (width-1)/2;
-        C[iter](1,0) = float(j) - (height-1)/2;
-        iter = iter + 1;
-      }
-    }
-  }
-  return C;
-}
-
 int main(int argc, char **argv)
 {
 
@@ -412,7 +454,8 @@ int main(int argc, char **argv)
   vector<Matrix<float, 5, 1>> eta_N(N);
 
   // Initialize base configuration
-  vector<MatrixXf> C = genBaseConfig(N,2,2);
+  //vector<MatrixXf> C = genBaseConfig(N,2,2); //formationShapeGen();
+  vector<Matrix<float, 2, 1>> C = formationShapeGen();
 
   // Initialise obstacle positions
   c_obst.col(0) << 10, 30;
@@ -444,6 +487,9 @@ int main(int argc, char **argv)
 
   // Initialize subscriber to joypad publisher
   ros::Subscriber joy_sub = n.subscribe("/joy_value", 1, joyCallback);
+
+  // Initialize formation shape callback
+  ros::Subscriber formation_shape_sub = n.subscribe("/formation_shape", 1, formationShapeCallback);
 
   // Initialize subscribers for consensus
   ros::Subscriber consensus[N];
@@ -517,6 +563,13 @@ int main(int argc, char **argv)
     marker_pub2.publish(marker);
 
     if(control_allowed_ & all_robots_positions_valid_){
+
+      // If new formation shape is published, change formation shape
+      if(change_formation_shape){
+        C = formationShapeGen();
+        change_formation_shape = false;
+      }
+
       // Generate soft scaling constraint
       Eigen::Matrix <float, 3, 2> A_soft;
       Eigen::Matrix <float, 3, 1> b_soft;
@@ -598,7 +651,6 @@ int main(int argc, char **argv)
       pos_msg.reference.position.x = pr(0,0);
       pos_msg.reference.position.y = pr(1,0);
       pos_msg.reference.position.z = pr(2,0);
-      pos_msg.header.frame_id = _control_frame_;
       pos_ref_pub.publish(pos_msg);
 
       // Publish velocity reference
