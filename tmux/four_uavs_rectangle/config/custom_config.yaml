@@ -33,3 +33,12 @@ mrs_uav_managers:
       eland_threshold: 4.0 # [m], position error triggering eland
       failsafe_threshold: 6.0 # [m], position error triggering failsafe land
       odometry_innovation_threshold: 1.5 # [m], position odometry innovation threshold
+      
+mrs_uav_trackers:
+
+ mpc_tracker:
+
+   collision_avoidance:
+
+     enabled: false # disabling this will stop this UAV to react to others, but it will still transmit data to others
+     radius: 2.0 # [m]

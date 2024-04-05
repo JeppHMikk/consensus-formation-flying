@@ -42,10 +42,12 @@ int ros_rate; // = 10; // ROS rate
 float ts; // = 1e-2; //1.0/float(ros_rate); // sampling time
 float Kv; // = 0.25;
 float lambda;
+float v_max;
 bool all_robots_positions_valid_ = false;
 bool control_allowed_ = false;
 string uavName; 
 int uavNum = std::stoi(std::getenv("UAV_NUM"));
+string odom_frame;
 string _est_frame_;
 string _control_frame_;
 string default_formation_shape = "grid";
@@ -172,11 +174,15 @@ void etaCallback(Eigen::Matrix<float, 5, 1>* eta_ptr, const std_msgs::Float32Mul
 }
 
 // Subscriber callback for getting position estimates
-void posCallback(Eigen::Matrix<float, 3, 1>* p_ptr, Eigen::Matrix<float, 3, 3>* Sigma_ptr, const nav_msgs::Odometry::ConstPtr& msg) {
+void posCallback(Eigen::Matrix<float, 3, 1>* p_ptr, Eigen::Matrix<float, 3, 1>* v_ptr, Eigen::Matrix<float, 3, 3>* Sigma_ptr, const nav_msgs::Odometry::ConstPtr& msg) {
     // extract position from message
     (*p_ptr) << msg->pose.pose.position.x,
                 msg->pose.pose.position.y,
                 msg->pose.pose.position.z;
+    (*v_ptr) << msg->twist.twist.linear.x,
+                msg->twist.twist.linear.y,
+                msg->twist.twist.linear.z;
+    odom_frame = msg->header.frame_id;
     // extract covariance from message
     Eigen::Matrix <float, 6, 6> Sigma_msg;
     for(int i=0; i<6; i++){
@@ -258,7 +264,7 @@ Eigen::MatrixXf repPot(Eigen::MatrixXf p_in, float a, float b, float rho_0, floa
       df = 0.0;
     }
     else{
-      df = eta*(1/(rho + 1/10) - 1/rho_act)*1/(rho*rho);
+      df = eta*(1/rho - 1/rho_act)*1/(rho*rho);
     }
     v_rep = v_rep + df*drho;
   }
@@ -350,7 +356,7 @@ Eigen::MatrixXf projScale(Eigen::MatrixXf s, Eigen::MatrixXf A, Eigen::MatrixXf 
 
     int iter = 0;
 
-    while(iter < 100){
+    while(iter < 1000){
 
       iter++;
 
@@ -380,6 +386,7 @@ Eigen::MatrixXf projScale(Eigen::MatrixXf s, Eigen::MatrixXf A, Eigen::MatrixXf 
       {
         // If all Lagrange multipliers are negative, the optimiser is done
         if((lambda_opt.array() <= 0).all()){
+          cout << iter << endl;
           return s + ds_opt;
         }
         // If there is a positive Lagrange multiplier, remove the constraint associated with the smallest one
@@ -438,6 +445,7 @@ int main(int argc, char **argv)
   ros::param::get("~lambda", lambda);
   ros::param::get("~est_frame", _est_frame_);
   ros::param::get("~control_frame", _control_frame_);
+  ros::param::get("~v_max", v_max);
 
   std::vector<std::string> UAV_names;  
   ros::param::get("~UAV_names", UAV_names);
@@ -452,6 +460,7 @@ int main(int argc, char **argv)
 
   // Initialize position estimate, position estimate covariance, and neighbour parameters
   vector<Matrix<float, 3, 1>> p(N); // position estimate
+  vector<Matrix<float, 3, 1>> v(N);
   vector<Matrix<float, 3, 3>> Sigma(N); // position estimate covariance
   vector<Matrix<float, 5, 1>> eta_N(N);
 
@@ -508,8 +517,8 @@ int main(int argc, char **argv)
   // Initialize subscribers for position estimates
   ros::Subscriber pos_sub[N];
   for (int i = 0; i < N; i++) {
-    auto callback_pos = [&p, &Sigma, i](const nav_msgs::Odometry::ConstPtr& msg) {
-      posCallback(&p[i], &Sigma[i], msg);
+    auto callback_pos = [&p, &v, &Sigma, i](const nav_msgs::Odometry::ConstPtr& msg) {
+      posCallback(&p[i], &v[i], &Sigma[i], msg);
     };
     pos_sub[i] = n.subscribe<nav_msgs::Odometry>("/"+UAV_names[i]+"/estimation_manager/odom_main", 1, callback_pos); // FIXME: the odometry topic should be parametrizable
   }
@@ -525,7 +534,7 @@ int main(int argc, char **argv)
   ros::Publisher marker_pub2 = n.advertise<visualization_msgs::Marker>("/visualization_marker_2", 1);
   uint32_t shape = visualization_msgs::Marker::CYLINDER; // Set shape of marker
   visualization_msgs::Marker marker;
-  marker.header.frame_id = _est_frame_; // FIXME: set this as parameter, it won;t be simulator origin in the real world
+  marker.header.frame_id = "simulator_origin"; // FIXME: set this as parameter, it won;t be simulator origin in the real world
   marker.header.stamp = ros::Time::now();
   marker.ns = "obstacle";
   marker.id = 0;
@@ -572,6 +581,7 @@ int main(int argc, char **argv)
         change_formation_shape = false;
       }
 
+      /*
       // Generate soft scaling constraint
       Eigen::Matrix <float, 3, 2> A_soft;
       Eigen::Matrix <float, 3, 1> b_soft;
@@ -584,6 +594,7 @@ int main(int argc, char **argv)
           iter += 1;
         }
       }
+      */
 
       // Generate hard scaling constraint
       Eigen::Matrix <float, 3, 2> A_hard;
@@ -599,7 +610,7 @@ int main(int argc, char **argv)
       }
 
       // Repulsive potential
-      deta_rep = v2deta(repPot(p[uavNum-1],a,b,rho_0,rho_1),eta,C[uavNum-1]);
+      deta_rep = v2deta(repPot(p[uavNum-1]+1/ros_rate*v[uavNum-1],a,b,rho_0,rho_1),eta,C[uavNum-1]);
 
       // Consensus step
       deta_N.setZero();
@@ -609,12 +620,14 @@ int main(int argc, char **argv)
         }
       }
 
+      /*
       // Perform soft projection step
       MatrixXf s_proj_soft = projScale(eta.block(1,0,2,1), A_soft, b_soft);
       MatrixXf deta_soft = Eigen::MatrixXf::Zero(5,1);
       if((!isnan(s_proj_soft.array())).all()){
         deta_soft.block(1,0,2,1) = 0.2*(s_proj_soft - eta.block(1,0,2,1));
       }
+      */
 
       // Calculate parameter derivative
       deta = deta_joy + deta_N + deta_rep; // + deta_soft;
@@ -622,18 +635,25 @@ int main(int argc, char **argv)
       // Perform hard projection step
       MatrixXf s_proj_hard = projScale(eta.block(1,0,2,1)+deta.block(1,0,2,1), A_hard, b_hard);
       if((!isnan(s_proj_hard.array())).all()){
+        //cout << "------------" << endl;
+        //cout << deta.block(1,0,2,1) << endl;
         deta.block(1,0,2,1) = s_proj_hard - eta.block(1,0,2,1);
+        //cout << deta.block(1,0,2,1) << endl;
       }
 
-      // Calculate reference position and velocity
+      // Scale parameter derivative down to ensure that drones don't fly too fast
       Eigen::MatrixXf vr = refVel(eta,deta,C[uavNum-1]);
+      if(vr.norm() > v_max){
+        deta = v_max/vr.norm()*deta;
+      }
+
       Eigen::MatrixXf pr = refPos(eta,C[uavNum-1]);
 
       // Update eta
       eta = eta + ts*deta;
 
-      // Publish position reference
       /*
+      // Publish position reference
       geometry_msgs::PointStamped pos_ref;
       pos_ref.header.frame_id = _est_frame_;
       pos_ref.point.x = pr(0,0);
@@ -650,6 +670,7 @@ int main(int argc, char **argv)
       */
 
       mrs_msgs::ReferenceStamped pos_msg;
+      pos_msg.header.frame_id = "gps_baro_origin";
       pos_msg.reference.position.x = pr(0,0);
       pos_msg.reference.position.y = pr(1,0);
       pos_msg.reference.position.z = pr(2,0);
@@ -667,6 +688,7 @@ int main(int argc, char **argv)
       std::vector<float> data(eta.data(), eta.data() + eta.size());
       eta_msg.data = data;
       consensus_pub.publish(eta_msg);
+
     }
 
     ros::spinOnce();
