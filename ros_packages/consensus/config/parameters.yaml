@@ -1,4 +1,3 @@
-est_frame: gps_baro_origin
 control_frame: gps_baro_origin
 N: 4
 clearance: 0.5

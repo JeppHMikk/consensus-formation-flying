@@ -15,6 +15,7 @@
 #include "visualization_msgs/Marker.h"
 #include <std_srvs/Trigger.h>
 #include <mrs_lib/transformer.h>
+#include <geometry_msgs/TransformStamped.h>
 
 #include <sstream>
 #include <random>
@@ -26,7 +27,13 @@
 #include <vector>
 #include <functional>
 #include <boost/bind.hpp>
+
+// custom helper functions from mrs library
+#include <mrs_lib/transformer.h>
  
+#include <tf2_ros/transform_listener.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+
 using namespace std;
 using namespace Eigen;
 
@@ -48,7 +55,6 @@ bool control_allowed_ = false;
 string uavName; 
 int uavNum = std::stoi(std::getenv("UAV_NUM"));
 string odom_frame;
-string _est_frame_;
 string _control_frame_;
 string default_formation_shape = "grid";
 string formation_shape = default_formation_shape;
@@ -62,6 +68,8 @@ MatrixXf deta_rep(5,1);
 MatrixXd joy_val(6,1); // joypad values
 MatrixXf c_obst(2,2);
 MatrixXf r_obst(2,1);
+
+std::shared_ptr<mrs_lib::Transformer> transformer_;
 
 // Service callback for activating robots
 bool activationServiceCallback(std_srvs::Trigger::Request& req, std_srvs::Trigger::Response& res){
@@ -174,23 +182,53 @@ void etaCallback(Eigen::Matrix<float, 5, 1>* eta_ptr, const std_msgs::Float32Mul
 }
 
 // Subscriber callback for getting position estimates
-void posCallback(Eigen::Matrix<float, 3, 1>* p_ptr, Eigen::Matrix<float, 3, 1>* v_ptr, Eigen::Matrix<float, 3, 3>* Sigma_ptr, const nav_msgs::Odometry::ConstPtr& msg) {
-    // extract position from message
-    (*p_ptr) << msg->pose.pose.position.x,
-                msg->pose.pose.position.y,
-                msg->pose.pose.position.z;
+void posCallback(Eigen::Matrix<float, 3, 1>* p_ptr, Eigen::Matrix<float, 3, 1>* v_ptr, Eigen::Matrix<float, 3, 3>* Sigma_ptr, string uavNm, const nav_msgs::Odometry::ConstPtr& msg) {
+
+    // Generate transform from odometry frame to control frame
+    geometry_msgs::TransformStamped tf_est;
+    std::optional<geometry_msgs::TransformStamped> res = transformer_->getTransform(msg->header.frame_id, uavNm + "/" + _control_frame_);
+    if(res){
+      tf_est = res.value();
+    }
+
+    // Load position in odometry frame into vector
+    Eigen::Vector3d p_msg;
+    p_msg << msg->pose.pose.position.x,
+             msg->pose.pose.position.y,
+             msg->pose.pose.position.z;
+
+    // Transform position to control frame using transform
+    auto res2 = transformer_->transformAsVector(p_msg, tf_est);
+    Eigen::Vector3d p_msg_tf;
+    if(res2){
+      (*p_ptr) = res2.value().cast<float>();
+    }
+
+    // Extract rotation matrix from transform
+    tf2::Transform tf_est_2;
+    tf2::fromMsg(tf_est.transform, tf_est_2);
+    tf2::Matrix3x3 rotation_matrix(tf_est_2.getRotation());
+    Eigen::Matrix<float, 3, 3> R;
+    for(int i=0; i<3; i++){
+      for(int j=0; j<3; j++){
+        R(i,j) = rotation_matrix[i][j];
+      }
+    }
+
+    /*
     (*v_ptr) << msg->twist.twist.linear.x,
                 msg->twist.twist.linear.y,
                 msg->twist.twist.linear.z;
-    odom_frame = msg->header.frame_id;
-    // extract covariance from message
+    */
+
+    // Extract covariance from message and map into control frame using rotation matrix
     Eigen::Matrix <float, 6, 6> Sigma_msg;
     for(int i=0; i<6; i++){
         for(int j = 0; j<6; j++){
             Sigma_msg(i,j) = msg->pose.covariance[6*i+j];
         }
     }
-    (*Sigma_ptr) << Sigma_msg.block(0,0,3,3);
+    (*Sigma_ptr) << R.transpose()*Sigma_msg.block(0,0,3,3)*R;
     all_robots_positions_valid_ = true;
 }
 
@@ -250,12 +288,12 @@ Eigen::MatrixXf refVel(Eigen::MatrixXf eta_in, Eigen::MatrixXf deta_in, Eigen::M
 }
 
 // Repulsive potential for collision avoidance
-Eigen::MatrixXf repPot(Eigen::MatrixXf p_in, float a, float b, float rho_0, float rho_1){
-  Eigen::Matrix <float, 2, 1> v_rep;
-  v_rep << 0,
-           0;
+Eigen::Matrix<float, 2, 1> repPot(Eigen::MatrixXf p_in){
+  Eigen::Matrix<float, 2, 1> v_rep;
+  v_rep.setZero();
+
   float eta = 1000;
-  float rho_act = 20.0;
+  float rho_act = 10.0;
   for(int i=0; i<2; i++){
     float rho = (c_obst.col(i) - p_in.block(0,0,2,1)).norm() - r_obst(i,0) - clearance;
     Eigen::MatrixXf drho = (p_in.block(0,0,2,1) - c_obst.col(i))/((p_in.block(0,0,2,1) - c_obst.col(i)).norm());
@@ -268,6 +306,34 @@ Eigen::MatrixXf repPot(Eigen::MatrixXf p_in, float a, float b, float rho_0, floa
     }
     v_rep = v_rep + df*drho;
   }
+  return v_rep;
+}
+
+Eigen::Matrix<float, 2, 1> losPot(Eigen::MatrixXf p_i, Eigen::MatrixXf p_j){
+
+  Eigen::Matrix<float, 2, 2> R90;
+  R90 << 0, 1,
+         -1, 0;
+
+  float d_act = 20.0;
+  Eigen::Matrix <float, 2, 1> v_rep;
+  v_rep.setZero();
+
+  for(int i=0; i<2; i++){
+    Eigen::MatrixXf a = R90*(p_j - p_i)/((p_j - p_i).norm());
+    Eigen::MatrixXf b = a.transpose()*p_i;
+    float d = (a.transpose()*c_obst.col(i) - b).value() - r_obst(i,0) - clearance;
+    Eigen::MatrixXf p_obst_proj = c_obst.col(i) - (a.transpose()*c_obst.col(i) - b)*a;
+    float w = (p_j - p_obst_proj).norm()/((p_j - p_i).norm());
+    cout << "*************" << endl;
+    cout << i << endl;
+    cout << d << endl;
+    cout << w << endl;
+    if(w > 0 & w < 1){
+      v_rep = v_rep - eta*(1/d - 1/d_act)*1/(d*d)*a;
+    }
+  }
+
   return v_rep;
 }
 
@@ -356,7 +422,7 @@ Eigen::MatrixXf projScale(Eigen::MatrixXf s, Eigen::MatrixXf A, Eigen::MatrixXf 
 
     int iter = 0;
 
-    while(iter < 1000){
+    while(iter < 100){
 
       iter++;
 
@@ -386,7 +452,6 @@ Eigen::MatrixXf projScale(Eigen::MatrixXf s, Eigen::MatrixXf A, Eigen::MatrixXf 
       {
         // If all Lagrange multipliers are negative, the optimiser is done
         if((lambda_opt.array() <= 0).all()){
-          cout << iter << endl;
           return s + ds_opt;
         }
         // If there is a positive Lagrange multiplier, remove the constraint associated with the smallest one
@@ -428,7 +493,8 @@ int main(int argc, char **argv)
   ros::init(argc, argv, "consensus_node_" + uavNum);
   ros::NodeHandle n;
 
-  std::shared_ptr<mrs_lib::Transformer> transformer_;
+  transformer_ = std::make_shared<mrs_lib::Transformer>(n, "uav" + to_string(uavNum) + "/Transformer");
+  transformer_->retryLookupNewest(true);
 
   // Load ROS parameters
   ros::param::get("~N", N);
@@ -443,7 +509,6 @@ int main(int argc, char **argv)
   ros::param::get("~ts", ts);
   ros::param::get("~Kv", Kv);
   ros::param::get("~lambda", lambda);
-  ros::param::get("~est_frame", _est_frame_);
   ros::param::get("~control_frame", _control_frame_);
   ros::param::get("~v_max", v_max);
 
@@ -517,8 +582,8 @@ int main(int argc, char **argv)
   // Initialize subscribers for position estimates
   ros::Subscriber pos_sub[N];
   for (int i = 0; i < N; i++) {
-    auto callback_pos = [&p, &v, &Sigma, i](const nav_msgs::Odometry::ConstPtr& msg) {
-      posCallback(&p[i], &v[i], &Sigma[i], msg);
+    auto callback_pos = [&p, &v, &Sigma, UAV_names, i](const nav_msgs::Odometry::ConstPtr& msg) {
+      posCallback(&p[i], &v[i], &Sigma[i], UAV_names[i], msg);
     };
     pos_sub[i] = n.subscribe<nav_msgs::Odometry>("/"+UAV_names[i]+"/estimation_manager/odom_main", 1, callback_pos); // FIXME: the odometry topic should be parametrizable
   }
@@ -610,7 +675,15 @@ int main(int argc, char **argv)
       }
 
       // Repulsive potential
-      deta_rep = v2deta(repPot(p[uavNum-1]+1/ros_rate*v[uavNum-1],a,b,rho_0,rho_1),eta,C[uavNum-1]);
+      Eigen::MatrixXf v_rep = repPot(refPos(eta,C[uavNum-1])); //;repPot(p[uavNum-1]);
+      /*
+      for(int i=0; i<N; i++){
+        if(i != (uavNum-1)){
+          v_rep = v_rep + losPot(p[uavNum-1],p[i]);
+        }
+      }
+      */
+      deta_rep = v2deta(v_rep,eta,C[uavNum-1]);
 
       // Consensus step
       deta_N.setZero();
@@ -652,25 +725,8 @@ int main(int argc, char **argv)
       // Update eta
       eta = eta + ts*deta;
 
-      /*
-      // Publish position reference
-      geometry_msgs::PointStamped pos_ref;
-      pos_ref.header.frame_id = _est_frame_;
-      pos_ref.point.x = pr(0,0);
-      pos_ref.point.y = pr(1,0);
-      pos_ref.point.z = pr(2,0);
-      auto res = transformer_->transformSingle(pos_ref, _control_frame_);
-      if (res) {
-        pos_ref = res.value();
-        mrs_msgs::ReferenceStamped pos_msg;
-        pos_msg.reference.position = pos_ref.point;
-        pos_msg.header.frame_id = _control_frame_;
-        pos_ref_pub.publish(pos_msg);
-      }
-      */
-
       mrs_msgs::ReferenceStamped pos_msg;
-      pos_msg.header.frame_id = "gps_baro_origin";
+      pos_msg.header.frame_id = _control_frame_;
       pos_msg.reference.position.x = pr(0,0);
       pos_msg.reference.position.y = pr(1,0);
       pos_msg.reference.position.z = pr(2,0);
