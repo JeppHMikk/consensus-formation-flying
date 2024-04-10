@@ -39,6 +39,7 @@ using namespace Eigen;
 
 int N;
 float clearance; // = 2;
+float clearance_obstacles;
 float max_vel; // = 20;
 float rho_0; // = 2.0;
 float rho_1; // = 5.0;
@@ -295,7 +296,7 @@ Eigen::Matrix<float, 2, 1> repPot(Eigen::MatrixXf p_in){
   float eta = 1000;
   float rho_act = 10.0;
   for(int i=0; i<2; i++){
-    float rho = (c_obst.col(i) - p_in.block(0,0,2,1)).norm() - r_obst(i,0) - clearance;
+    float rho = (c_obst.col(i) - p_in.block(0,0,2,1)).norm() - r_obst(i,0) - clearance_obstacles;
     Eigen::MatrixXf drho = (p_in.block(0,0,2,1) - c_obst.col(i))/((p_in.block(0,0,2,1) - c_obst.col(i)).norm());
     float df;
     if(rho >= rho_act){
@@ -499,6 +500,7 @@ int main(int argc, char **argv)
   // Load ROS parameters
   ros::param::get("~N", N);
   ros::param::get("~clearance", clearance);
+  ros::param::get("~clearance_obstacles",clearance_obstacles);
   ros::param::get("~max_vel", max_vel);
   ros::param::get("~rho_0", rho_0);
   ros::param::get("~rho_1", rho_1);
@@ -705,13 +707,9 @@ int main(int argc, char **argv)
       // Calculate parameter derivative
       deta = deta_joy + deta_N + deta_rep; // + deta_soft;
 
-      // Perform hard projection step
       MatrixXf s_proj_hard = projScale(eta.block(1,0,2,1)+deta.block(1,0,2,1), A_hard, b_hard);
       if((!isnan(s_proj_hard.array())).all()){
-        //cout << "------------" << endl;
-        //cout << deta.block(1,0,2,1) << endl;
         deta.block(1,0,2,1) = s_proj_hard - eta.block(1,0,2,1);
-        //cout << deta.block(1,0,2,1) << endl;
       }
 
       // Scale parameter derivative down to ensure that drones don't fly too fast
@@ -720,10 +718,10 @@ int main(int argc, char **argv)
         deta = v_max/vr.norm()*deta;
       }
 
-      Eigen::MatrixXf pr = refPos(eta,C[uavNum-1]);
-
       // Update eta
       eta = eta + ts*deta;
+
+      Eigen::MatrixXf pr = refPos(eta,C[uavNum-1]);
 
       mrs_msgs::ReferenceStamped pos_msg;
       pos_msg.header.frame_id = _control_frame_;

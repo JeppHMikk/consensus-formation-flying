@@ -40,5 +40,5 @@ mrs_uav_trackers:
 
    collision_avoidance:
 
-     enabled: false # disabling this will stop this UAV to react to others, but it will still transmit data to others
+     enabled: true # disabling this will stop this UAV to react to others, but it will still transmit data to others
      radius: 2.0 # [m]
