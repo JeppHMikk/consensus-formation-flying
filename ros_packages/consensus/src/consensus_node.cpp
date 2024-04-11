@@ -28,6 +28,9 @@
 #include <functional>
 #include <boost/bind.hpp>
 
+#include <vector>
+#include <array>
+
 // custom helper functions from mrs library
 #include <mrs_lib/transformer.h>
  
@@ -37,38 +40,39 @@
 using namespace std;
 using namespace Eigen;
 
-int N;
-float clearance; // = 2;
-float clearance_obstacles;
-float max_vel; // = 20;
-float rho_0; // = 2.0;
-float rho_1; // = 5.0;
-float r; // = 0.4; // robot minimum containing sphere radius
-float m_soft; // = 1.5; // soft constraint allowed standard deviations
-float m_hard; // = 2.3263; // hard constraint allowed standard deviations
-int ros_rate; // = 10; // ROS rate
-float ts; // = 1e-2; //1.0/float(ros_rate); // sampling time
-float Kv; // = 0.25;
-float lambda;
-float v_max;
-bool all_robots_positions_valid_ = false;
-bool control_allowed_ = false;
-string uavName; 
-int uavNum = std::stoi(std::getenv("UAV_NUM"));
-string odom_frame;
-string _control_frame_;
-string default_formation_shape = "grid";
-string formation_shape = default_formation_shape;
-bool change_formation_shape = false;
+// PARAMETERS
+int N; // Number of robots
+float clearance; // Minimum clearance between robots
+float clearance_obstacles; // Minimum clearance between robots and obstacles
+float r; // Robot minimum containing sphere radius
+float m_soft; // Soft constraint allowed standard deviations
+float m_hard; // Hard constraint allowed standard deviations
+int ros_rate; // ROS rate
+float ts; // Eta parameter update step size 
+float Kv; // = 0.
+float lambda; // Consensus parameter
+float v_max; // Maximum velocity
+bool all_robots_positions_valid_ = false; // Boolean to check that all robot positions are valid and that the algorithm can initiate
+bool control_allowed_ = false; // Boolean to activate algorithm
+string uavName; // Name of UAV
+int uavNum = std::stoi(std::getenv("UAV_NUM")); // UAV ID number
+string _control_frame_; // The frame that the control is done in
+string default_formation_shape = "grid"; // Default formation shape
+string formation_shape = default_formation_shape; // Initiate formation shape to be default
+bool change_formation_shape = false; // Bool for when robots have to change formation shape
+float rho_act;
+float pot_strength;
 
 MatrixXf eta(5,1); // formation parameters (phi,sx,sy,tx,ty)
 MatrixXf deta(5,1); // formation parameter derivative
 MatrixXf deta_N(5,1); // consensus formation parameter derivative
-MatrixXf deta_joy(5,1);
-MatrixXf deta_rep(5,1);
+MatrixXf deta_joy(5,1); // joypad parameter derivative
+MatrixXf deta_rep(5,1); // repulsive potential parameter derivative
 MatrixXd joy_val(6,1); // joypad values
-MatrixXf c_obst(2,2);
-MatrixXf r_obst(2,1);
+
+int N_obst; // Number of obstacles
+Eigen::MatrixXf c_obst; // Obstacle center position
+Eigen::MatrixXf r_obst; // Obstacle radius
 
 std::shared_ptr<mrs_lib::Transformer> transformer_;
 
@@ -79,15 +83,12 @@ bool activationServiceCallback(std_srvs::Trigger::Request& req, std_srvs::Trigge
   res.success = true;
   if (control_allowed_) {
     res.message = "Control was already allowed.";
-    //ROS_WARN("[FormationController]: %s", res.message.c_str());
   } else if (!all_robots_positions_valid_) {
     res.message = "Robots are not ready, control cannot be activated.";
-    //ROS_WARN("[FormationController]: %s", res.message.c_str());
     res.success = false;
   } else {
     control_allowed_ = true;
     res.message = "Control allowed.";
-    //ROS_INFO("[FormationController]: %s", res.message.c_str());
   }
   return res.success;
 }
@@ -102,6 +103,7 @@ void joyCallback(const std_msgs::Int32MultiArray::ConstPtr& msg)
               -10*float(msg->data[3])/32767.0;
 }
 
+// Subscriber callback for getting formation shape
 void formationShapeCallback(const std_msgs::String::ConstPtr& msg){
   if(formation_shape.compare(msg->data.c_str()) != 0){
     formation_shape = msg->data.c_str();
@@ -109,6 +111,7 @@ void formationShapeCallback(const std_msgs::String::ConstPtr& msg){
   }
 }
 
+// Function for generating formation shape
 vector<Eigen::Matrix<float,2,1>> formationShapeGen(){
   vector<Eigen::Matrix<float,2,1>> C(N);
   if(formation_shape.compare("grid") == 0){
@@ -292,10 +295,7 @@ Eigen::MatrixXf refVel(Eigen::MatrixXf eta_in, Eigen::MatrixXf deta_in, Eigen::M
 Eigen::Matrix<float, 2, 1> repPot(Eigen::MatrixXf p_in){
   Eigen::Matrix<float, 2, 1> v_rep;
   v_rep.setZero();
-
-  float eta = 1000;
-  float rho_act = 10.0;
-  for(int i=0; i<2; i++){
+  for(int i=0; i<N_obst; i++){
     float rho = (c_obst.col(i) - p_in.block(0,0,2,1)).norm() - r_obst(i,0) - clearance_obstacles;
     Eigen::MatrixXf drho = (p_in.block(0,0,2,1) - c_obst.col(i))/((p_in.block(0,0,2,1) - c_obst.col(i)).norm());
     float df;
@@ -303,13 +303,14 @@ Eigen::Matrix<float, 2, 1> repPot(Eigen::MatrixXf p_in){
       df = 0.0;
     }
     else{
-      df = eta*(1/rho - 1/rho_act)*1/(rho*rho);
+      df = pot_strength*(1/rho - 1/rho_act)*1/(rho*rho);
     }
     v_rep = v_rep + df*drho;
   }
   return v_rep;
 }
 
+/*
 Eigen::Matrix<float, 2, 1> losPot(Eigen::MatrixXf p_i, Eigen::MatrixXf p_j){
 
   Eigen::Matrix<float, 2, 2> R90;
@@ -337,6 +338,7 @@ Eigen::Matrix<float, 2, 1> losPot(Eigen::MatrixXf p_i, Eigen::MatrixXf p_j){
 
   return v_rep;
 }
+*/
 
 // Function for mapping from velocity to parameter derivative
 Eigen::MatrixXf v2deta(Eigen::MatrixXf v, Eigen::MatrixXf eta_in, Eigen::MatrixXf C){
@@ -501,9 +503,6 @@ int main(int argc, char **argv)
   ros::param::get("~N", N);
   ros::param::get("~clearance", clearance);
   ros::param::get("~clearance_obstacles",clearance_obstacles);
-  ros::param::get("~max_vel", max_vel);
-  ros::param::get("~rho_0", rho_0);
-  ros::param::get("~rho_1", rho_1);
   ros::param::get("~r", r);
   ros::param::get("~m_soft", m_soft);
   ros::param::get("~m_hard", m_hard);
@@ -513,16 +512,31 @@ int main(int argc, char **argv)
   ros::param::get("~lambda", lambda);
   ros::param::get("~control_frame", _control_frame_);
   ros::param::get("~v_max", v_max);
+  ros::param::get("~rho_act", rho_act);
+  ros::param::get("~pot_strength", pot_strength);
 
   std::vector<std::string> UAV_names;  
   ros::param::get("~UAV_names", UAV_names);
 
+  std::vector<float> c_obst_x_param;
+  ros::param::get("~c_obst_x", c_obst_x_param);
+  std::vector<float> c_obst_y_param;
+  ros::param::get("~c_obst_y", c_obst_y_param);
+  std::vector<float> r_obst_param;
+  ros::param::get("~r_obst", r_obst_param);
+
+  N_obst = c_obst_x_param.size();
+
+  c_obst.resize(2,N_obst);
+  r_obst.resize(N_obst,1);
+
+  for(int i=0; i<N_obst; i++){
+    c_obst.col(i) << c_obst_x_param[i], c_obst_y_param[i];
+    r_obst(i,0) = r_obst_param[i];
+  }
+
   uavName = UAV_names[uavNum-1];
 
-  // Calculate parameters for collision avoidance
-  float b = max_vel + 1.0;
-  float a = -1/2*b*1/(rho_1 - rho_0);
-  float g = b*(rho_1 - 1/2*(rho_1 - rho_0));
   float Br = 2*r + clearance; // distance where collisions is assumed to happen
 
   // Initialize position estimate, position estimate covariance, and neighbour parameters
@@ -532,14 +546,7 @@ int main(int argc, char **argv)
   vector<Matrix<float, 5, 1>> eta_N(N);
 
   // Initialize base configuration
-  //vector<MatrixXf> C = genBaseConfig(N,2,2); //formationShapeGen();
   vector<Matrix<float, 2, 1>> C = formationShapeGen();
-
-  // Initialise obstacle positions
-  c_obst.col(0) << -10, 30;
-  r_obst(0,0) = 2;
-  c_obst.col(1) << 10, 30;
-  r_obst(1,0) = 2;
 
   // Fill eta with random numbers
   /*
@@ -551,6 +558,7 @@ int main(int argc, char **argv)
     //std::cout << eta(i,0) << std::endl;
   }
   */
+
   // Initialize eta
   eta << 0, 10, 10, 0, 0;
   for(int i=0; i<N; i++){
@@ -597,8 +605,10 @@ int main(int argc, char **argv)
   ros::Publisher pos_ref_pub = n.advertise<mrs_msgs::ReferenceStamped>("/" + uavName + "/control_manager/reference", 1);
 
   // Initialize cylinder obstacle marker publisher
-  ros::Publisher marker_pub1 = n.advertise<visualization_msgs::Marker>("/visualization_marker_1", 1);
-  ros::Publisher marker_pub2 = n.advertise<visualization_msgs::Marker>("/visualization_marker_2", 1);
+  ros::Publisher marker_pub[N_obst];
+  for(int i=0; i<N_obst; i++){
+    marker_pub[i] = n.advertise<visualization_msgs::Marker>("/visualization_marker_" + to_string(i+1), 1);
+  }
   uint32_t shape = visualization_msgs::Marker::CYLINDER; // Set shape of marker
   visualization_msgs::Marker marker;
   marker.header.frame_id = "simulator_origin"; // FIXME: set this as parameter, it won;t be simulator origin in the real world
@@ -607,9 +617,6 @@ int main(int argc, char **argv)
   marker.id = 0;
   marker.type = shape;
   marker.action = visualization_msgs::Marker::ADD;
-  //marker.pose.position.x = 10;
-  //marker.pose.position.y = 10;
-  //marker.pose.position.z = 5;
   marker.pose.orientation.x = 0.0;
   marker.pose.orientation.y = 0.0;
   marker.pose.orientation.z = 0.0;
@@ -631,14 +638,12 @@ int main(int argc, char **argv)
     //ROS_INFO("UAV_name=%s", UAV_names[uavNum-1]);
 
     // Publish obstacle markers
-    marker.pose.position.x = c_obst(0,0);
-    marker.pose.position.y = c_obst(1,0);
-    marker.pose.position.z = 5;
-    marker_pub1.publish(marker);
-    marker.pose.position.x = c_obst(0,1);
-    marker.pose.position.y = c_obst(1,1);
-    marker.pose.position.z = 5;
-    marker_pub2.publish(marker);
+    for(int i=0; i<N_obst; i++){
+      marker.pose.position.x = c_obst(0,i);
+      marker.pose.position.y = c_obst(1,i);
+      marker.pose.position.z = 5;
+      marker_pub[i].publish(marker);
+    }
 
     if(control_allowed_ & all_robots_positions_valid_){
 
@@ -677,14 +682,7 @@ int main(int argc, char **argv)
       }
 
       // Repulsive potential
-      Eigen::MatrixXf v_rep = repPot(refPos(eta,C[uavNum-1])); //;repPot(p[uavNum-1]);
-      /*
-      for(int i=0; i<N; i++){
-        if(i != (uavNum-1)){
-          v_rep = v_rep + losPot(p[uavNum-1],p[i]);
-        }
-      }
-      */
+      Eigen::MatrixXf v_rep = repPot(refPos(eta,C[uavNum-1])); 
       deta_rep = v2deta(v_rep,eta,C[uavNum-1]);
 
       // Consensus step
