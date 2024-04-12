@@ -50,4 +50,4 @@ services:
   - name: "control_manager/enable_callbacks"
     type: std_srvs/SetBool
   - name: "activate"
-    type: std_srvs/SetBool
+    type: std_srvs/Trigger

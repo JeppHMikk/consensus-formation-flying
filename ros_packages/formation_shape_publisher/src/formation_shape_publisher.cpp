@@ -61,6 +61,7 @@ int main(int argc, char **argv)
 
     msg.data = formation_shape;
 
+    ROS_INFO_ONCE("[%s]: Publishing default shape: %s.", ros::this_node::getName().c_str(), msg.data.c_str());
     shape_pub.publish(msg);
 
     ros::spinOnce();
