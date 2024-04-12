@@ -29,8 +29,8 @@ ground:
   z: 0.0 # [m]
 
 uav_names: [
-  "uav1",
-  "uav2",
+  "uav3",
+  "uav7",
   #"uav3",
   #"uav4",
   #"uav5",
@@ -41,7 +41,7 @@ uav_names: [
   #"uav10",
 ]
 
-uav1:
+uav3:
   type: "x500"
   spawn:
     x: 0.0
@@ -49,7 +49,7 @@ uav1:
     z: 2.0
     heading: 0
 
-uav2:
+uav7:
   type: "x500"
   spawn:
     x: 0.0

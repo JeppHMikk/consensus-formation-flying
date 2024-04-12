@@ -35,38 +35,14 @@ pre_input=""
 # * "new line" after the command    => the command will be called after start
 # * NO "new line" after the command => the command will wait for user's <enter>
 input=(
-  'Rosbag' 'waitForOffboard; ./record.sh
+  'joyreader' 'waitForRos; rosrun joy_reader joy_reader
 '
-  'Sensors' 'waitForTime; roslaunch mrs_uav_deployment sensors.launch
-'
-  'Nimbro' 'waitForTime; rosrun mrs_uav_deployment run_nimbro.py ./config/network_config.yaml ./config/communication_config.yaml
-'
-  'HwApi' 'waitForTime; roslaunch mrs_uav_px4_api api.launch
-'
-  'Status' 'waitForHw; roslaunch mrs_uav_status status.launch
-'
-  'Core' 'waitForTime; roslaunch mrs_uav_core core.launch platform_config:=`rospack find mrs_uav_deployment`/config/mrs_uav_system/$UAV_TYPE.yaml world_config:=`rospack find mrs_uav_deployment`/config/worlds/world_$WORLD_NAME.yaml custom_config:=./config/custom_config.yaml network_config:=./config/network_config.yaml
-'
-  'AutoStart' 'waitForHw; roslaunch mrs_uav_autostart automatic_start.launch
-'
-  'Consensus' 'waitForHw; roslaunch consensus consensus.launch parameter_file:=parameters_4_drones
-'
-  'Activation' 'rosservice call /'"$UAV_NAME"'/activate'
-  'tf_connector' 'waitForTime; roslaunch mrs_tf_connector tf_connector.launch custom_config:=./config/tf_connector.yaml
-'
-# do NOT modify the command list below
-  'EstimDiag' 'waitForHw; rostopic echo /'"$UAV_NAME"'/estimation_manager/diagnostics
-'
-  'kernel_log' 'tail -f /var/log/kern.log -n 100
-'
-  'roscore' 'roscore
-'
-  'simtime' 'waitForRos; rosparam set use_sim_time false
+  'shape_publisher' 'waitForRos; rosrun formation_shape_publisher formation_shape_publisher
 '
 )
 
 # the name of the window to focus after start
-init_window="Status"
+init_window="shape_publisher"
 
 # automatically attach to the new session?
 # {true, false}, default true

@@ -1,6 +1,6 @@
 control_frame: gps_baro_origin
 N: 2
-UAV_names: [uav1, uav2]
+UAV_names: [uav3, uav7]
 clearance: 2.5
 clearance_obstacles: 0.5
 rho_act: 10.0

@@ -49,7 +49,7 @@ input=(
 '
   'AutoStart' 'waitForHw; roslaunch mrs_uav_autostart automatic_start.launch
 '
-  'Consensus' 'waitForHw; roslaunch consensus consensus.launch parameter_file:=parameters_4_drones
+  'Consensus' 'waitForHw; roslaunch consensus consensus.launch parameter_file:=parameters_2_drones
 '
   'Activation' 'rosservice call /'"$UAV_NAME"'/activate'
   'tf_connector' 'waitForTime; roslaunch mrs_tf_connector tf_connector.launch custom_config:=./config/tf_connector.yaml
