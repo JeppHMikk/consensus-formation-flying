@@ -72,10 +72,10 @@ windows:
       layout: tiled
       panes:
         #- waitForRos; rosparam set N 4
-        - export UAV_NAME=uav1; waitForRos; export UAV_NUM=1; roslaunch consensus consensus.launch
-        - export UAV_NAME=uav2; waitForRos; export UAV_NUM=2; roslaunch consensus consensus.launch
-        - export UAV_NAME=uav3; waitForRos; export UAV_NUM=3; roslaunch consensus consensus.launch
-        - export UAV_NAME=uav4; waitForRos; export UAV_NUM=4; roslaunch consensus consensus.launch
+        - export UAV_NAME=uav1; waitForRos; roslaunch consensus consensus.launch parameter_file:=parameters_4_drones
+        - export UAV_NAME=uav2; waitForRos; roslaunch consensus consensus.launch parameter_file:=parameters_4_drones
+        - export UAV_NAME=uav3; waitForRos; roslaunch consensus consensus.launch parameter_file:=parameters_4_drones
+        - export UAV_NAME=uav4; waitForRos; roslaunch consensus consensus.launch parameter_file:=parameters_4_drones
   - activate:
       layout: tiled
       panes:

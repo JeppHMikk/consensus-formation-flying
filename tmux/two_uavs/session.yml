@@ -1,0 +1,75 @@
+# do not modify these
+root: ./
+name: simulation
+socket_name: mrs
+attach: false
+tmux_options: -f /etc/ctu-mrs/tmux.conf
+# you can modify these
+pre_window: export UAV_NAME=uav1; export RUN_TYPE=simulation; export UAV_TYPE=x500; export BOND=false; export CUSTOM_CONFIG=./config/custom_config.yaml; export WORLD_CONFIG=./config/world_config.yaml; export NETWORK_CONFIG=./config/network_config.yaml; export PLATFORM_CONFIG=`rospack find mrs_multirotor_simulator`/config/mrs_uav_system/$UAV_TYPE.yaml
+startup_window: goto
+windows:
+  - roscore:
+      layout: tiled
+      panes:
+        - roscore
+  - simulator:
+      layout: tiled
+      panes:
+        - waitForRos; roslaunch mrs_multirotor_simulator multirotor_simulator.launch custom_config:=./config/simulator.yaml
+#  - gazebo:
+#      layout: tiled
+#      panes:
+#        - waitForRos; roslaunch mrs_uav_gazebo_simulation simulation.launch world_name:=mrs_city gui:=true
+#        - waitForGazebo; rosservice call /mrs_drone_spawner/spawn "1 2 3 4 --$UAV_TYPE --enable-rangefinder"
+#        - export UAV_NAME=uav1; waitForControl; gz camera -c gzclient_camera -f $UAV_NAME; history -s gz camera -c gzclient_camera -f $UAV_NAME
+  - status:
+      layout: tiled
+      panes:
+        - waitForHw; export UAV_NAME=uav1; roslaunch mrs_uav_status status.launch
+        - waitForHw; export UAV_NAME=uav2; roslaunch mrs_uav_status status.launch
+  - hw_api:
+      layout: tiled
+      panes:
+        - waitForTime; export UAV_NAME=uav1; roslaunch mrs_multirotor_simulator hw_api.launch custom_config:=./config/hw_api.yaml nodelet_manager_name:=$UAV_NAME\_nodelet_manager
+        - waitForTime; export UAV_NAME=uav2; roslaunch mrs_multirotor_simulator hw_api.launch custom_config:=./config/hw_api.yaml nodelet_manager_name:=$UAV_NAME\_nodelet_manager
+  - control:
+      layout: tiled
+      panes:
+        - export UAV_NAME=uav1; waitForTime; roslaunch mrs_uav_core core.launch
+        - export UAV_NAME=uav2; waitForTime; roslaunch mrs_uav_core core.launch
+  - automatic_start:
+      layout: tiled
+      panes:
+        - export UAV_NAME=uav1; waitForTime; roslaunch mrs_uav_autostart automatic_start.launch custom_config:=./config/automatic_start.yaml
+        - export UAV_NAME=uav2; waitForTime; roslaunch mrs_uav_autostart automatic_start.launch custom_config:=./config/automatic_start.yaml
+  - takeoff:
+      layout: tiled
+      panes:
+        - export UAV_NAME=uav1; waitForControl; rosservice call /$UAV_NAME/hw_api/arming 1; sleep 2; rosservice call /$UAV_NAME/hw_api/offboard; exit
+        - export UAV_NAME=uav2; waitForControl; rosservice call /$UAV_NAME/hw_api/arming 1; sleep 2; rosservice call /$UAV_NAME/hw_api/offboard; exit
+  - rviz:
+      layout: tiled
+      panes:
+        - waitForControl; rosrun rviz rviz -d ./rviz.rviz
+  - joy_reader:
+      layout: tiled
+      panes: rosrun joy_reader joy_reader
+  - formation_shape:
+      layout: tiled
+      panes:
+        - waitForRos; rosrun formation_shape_publisher formation_shape_publisher
+  - consensus:
+      layout: tiled
+      panes:
+        #- waitForRos; rosparam set N 4
+        - export UAV_NAME=uav1; waitForRos; export UAV_NUM=1; roslaunch consensus consensus.launch parameter_file:=parameters_2_drones
+        - export UAV_NAME=uav2; waitForRos; export UAV_NUM=2; roslaunch consensus consensus.launch parameter_file:=parameters_2_drones
+  - activate:
+      layout: tiled
+      panes:
+        - waitForTakeoff; rosservice call /uav1/activate
+        - waitForTakeoff; rosservice call /uav2/activate
+  #- recording:
+  #    layout: tiled
+  #    panes:
+  #      - waitForTakeoff; cd bagfiles; rosbag record -a
