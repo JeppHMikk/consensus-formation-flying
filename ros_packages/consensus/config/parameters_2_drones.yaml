@@ -1,6 +1,6 @@
-odometry_topic: estimation_manager/odom_main
 control_frame: gps_baro_origin
-N: 4
+N: 2
+UAV_names: [uav1, uav2]
 clearance: 2.5
 clearance_obstacles: 0.5
 rho_act: 10.0
@@ -13,7 +13,6 @@ ts : 0.01
 Kv : 0.25
 lambda: 20
 v_max: 2.0
-UAV_names: [uav1, uav2, uav3, uav4]
 c_obst_x: [-10.0, 10.0, 0]
 c_obst_y: [30, 20, 60]
 r_obst: [2.0, 2.0, 2.0]

@@ -54,8 +54,8 @@ float lambda; // Consensus parameter
 float v_max; // Maximum velocity
 bool all_robots_positions_valid_ = false; // Boolean to check that all robot positions are valid and that the algorithm can initiate
 bool control_allowed_ = false; // Boolean to activate algorithm
-string uavName; // Name of UAV
-int uavNum = std::stoi(std::getenv("UAV_NUM")); // UAV ID number
+string uavName = std::string(std::getenv("UAV_NAME"));
+int uavNum; // = std::stoi(std::getenv("UAV_NUM")); // UAV ID number
 string _control_frame_; // The frame that the control is done in
 string default_formation_shape = "grid"; // Default formation shape
 string formation_shape = default_formation_shape; // Initiate formation shape to be default
@@ -521,6 +521,13 @@ int main(int argc, char **argv)
   std::vector<std::string> UAV_names;  
   ros::param::get("~UAV_names", UAV_names);
 
+  for(int i=0; i<N ; i++){
+    if(UAV_names[i].compare(uavName) == 0){
+      uavNum = i + 1;
+      break;
+    }
+  }
+
   std::vector<float> c_obst_x_param;
   ros::param::get("~c_obst_x", c_obst_x_param);
   std::vector<float> c_obst_y_param;
@@ -538,7 +545,7 @@ int main(int argc, char **argv)
     r_obst(i,0) = r_obst_param[i];
   }
 
-  uavName = UAV_names[uavNum-1];
+  //uavName = UAV_names[uavNum-1];
 
   float Br = 2*r + clearance; // distance where collisions is assumed to happen
 
@@ -675,7 +682,7 @@ int main(int argc, char **argv)
       Eigen::Matrix <float, 3, 2> A_hard;
       Eigen::Matrix <float, 3, 1> b_hard;
       iter = 0;
-      for(int i=0; i<4; i++){
+      for(int i=0; i<N; i++){
         if(i != (uavNum-1)){
           auto const_ij = genConst(eta.block(1,0,2,1), Sigma[i].block(0,0,2,2), Sigma[uavNum-1].block(0,0,2,2), C[i], C[uavNum-1], m_hard, Br);
           A_hard.row(iter) << get<0>(const_ij).transpose();
