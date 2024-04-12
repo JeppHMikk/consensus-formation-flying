@@ -499,6 +499,8 @@ int main(int argc, char **argv)
   transformer_ = std::make_shared<mrs_lib::Transformer>(n, "uav" + to_string(uavNum) + "/Transformer");
   transformer_->retryLookupNewest(true);
 
+  std::string _odom_topic;
+
   // Load ROS parameters
   ros::param::get("~N", N);
   ros::param::get("~clearance", clearance);
@@ -514,6 +516,7 @@ int main(int argc, char **argv)
   ros::param::get("~v_max", v_max);
   ros::param::get("~rho_act", rho_act);
   ros::param::get("~pot_strength", pot_strength);
+  ros::param::get("~odometry_topic", _odom_topic);
 
   std::vector<std::string> UAV_names;  
   ros::param::get("~UAV_names", UAV_names);
@@ -602,7 +605,7 @@ int main(int argc, char **argv)
     auto callback_pos = [&p, &v, &Sigma, UAV_names, i](const nav_msgs::Odometry::ConstPtr& msg) {
       posCallback(&p[i], &v[i], &Sigma[i], UAV_names[i], msg);
     };
-    pos_sub[i] = n.subscribe<nav_msgs::Odometry>("/"+UAV_names[i]+"/estimation_manager/odom_main", 1, callback_pos); // FIXME: the odometry topic should be parametrizable
+    pos_sub[i] = n.subscribe<nav_msgs::Odometry>("/"+UAV_names[i]+"/"+_odom_topic, 1, callback_pos);
   }
 
   // Initialize velocity reference publisher
@@ -618,7 +621,7 @@ int main(int argc, char **argv)
   }
   uint32_t shape = visualization_msgs::Marker::CYLINDER; // Set shape of marker
   visualization_msgs::Marker marker;
-  marker.header.frame_id = "simulator_origin"; // FIXME: set this as parameter, it won;t be simulator origin in the real world
+  marker.header.frame_id = _control_frame_;
   marker.header.stamp = ros::Time::now();
   marker.ns = "obstacle";
   marker.id = 0;
