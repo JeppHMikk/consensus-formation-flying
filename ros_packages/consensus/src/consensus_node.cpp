@@ -611,7 +611,7 @@ int main(int argc, char **argv)
   }
   uint32_t shape = visualization_msgs::Marker::CYLINDER; // Set shape of marker
   visualization_msgs::Marker marker;
-  marker.header.frame_id = _control_frame_; // FIXME: set this as parameter, it won;t be simulator origin in the real world
+  marker.header.frame_id = "simulator_origin"; // FIXME: set this as parameter, it won;t be simulator origin in the real world
   marker.header.stamp = ros::Time::now();
   marker.ns = "obstacle";
   marker.id = 0;
