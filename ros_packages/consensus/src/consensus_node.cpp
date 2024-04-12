@@ -621,7 +621,7 @@ int main(int argc, char **argv)
   }
   uint32_t shape = visualization_msgs::Marker::CYLINDER; // Set shape of marker
   visualization_msgs::Marker marker;
-  marker.header.frame_id = _control_frame_;
+  marker.header.frame_id = UAV_names[0] + "/" + _control_frame_;
   marker.header.stamp = ros::Time::now();
   marker.ns = "obstacle";
   marker.id = 0;
