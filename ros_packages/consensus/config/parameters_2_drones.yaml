@@ -1,4 +1,4 @@
-control_frame: gps_baro_origin
+control_frame: gps_garmin_origin
 N: 2
 UAV_names: [uav3, uav7]
 clearance: 2.5

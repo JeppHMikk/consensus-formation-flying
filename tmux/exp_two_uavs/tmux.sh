@@ -52,7 +52,7 @@ input=(
   'Consensus' 'waitForHw; roslaunch consensus consensus.launch parameter_file:=parameters_2_drones
 '
   'Activation' 'rosservice call /'"$UAV_NAME"'/activate'
-  'tf_connector' 'waitForTime; roslaunch mrs_tf_connector tf_connector.launch custom_config:=./config/tf_connector.yaml
+  'tf_connector' 'waitForTime; roslaunch consensus tf_publisher.launch
 '
 # do NOT modify the command list below
   'EstimDiag' 'waitForHw; rostopic echo /'"$UAV_NAME"'/estimation_manager/diagnostics

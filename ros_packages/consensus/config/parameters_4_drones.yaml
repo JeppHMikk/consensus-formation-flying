@@ -1,7 +1,7 @@
 odometry_topic: estimation_manager/odom_main
-control_frame: gps_baro_origin
+control_frame: gps_garmin_origin
 N: 4
-UAV_names: [uav3, uav7, uav8, uav13]
+UAV_names: [uav1, uav3, uav7, uav8]
 clearance: 2.5
 clearance_obstacles: 0.5
 rho_act: 10.0
