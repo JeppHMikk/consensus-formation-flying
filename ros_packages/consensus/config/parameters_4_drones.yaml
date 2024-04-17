@@ -2,7 +2,7 @@ odometry_topic: estimation_manager/odom_main
 control_frame: gps_garmin_origin
 N: 4
 UAV_names: [uav1, uav3, uav7, uav8]
-clearance: 2.5
+clearance: 6.0
 clearance_obstacles: 0.5
 rho_act: 10.0
 pot_strength: 1000.0
@@ -14,6 +14,6 @@ ts : 0.01
 Kv : 0.25
 lambda: 20
 v_max: 2.0
-c_obst_x: [-35.0, -15.0, -25.0]
-c_obst_y: [40, 30, 70]
+c_obst_x: [-45.0, -25.0, -35.0]
+c_obst_y: [25, 15, 55]
 r_obst: [2.0, 2.0, 2.0]

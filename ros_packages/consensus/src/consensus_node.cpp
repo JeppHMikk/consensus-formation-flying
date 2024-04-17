@@ -97,8 +97,8 @@ bool activationServiceCallback(std_srvs::Trigger::Request& req, std_srvs::Trigge
 void joyCallback(const std_msgs::Int32MultiArray::ConstPtr& msg)
 {
   deta_joy << 2*(float(msg->data[4])/32767.0 - float(msg->data[5])/32767.0),
-              4*float(msg->data[0])/32767.0,
-              -4*float(msg->data[1])/32767.0,
+              8*float(msg->data[0])/32767.0,
+              -8*float(msg->data[1])/32767.0,
               10*float(msg->data[2])/32767.0,
               -10*float(msg->data[3])/32767.0;
 }
@@ -279,7 +279,7 @@ Eigen::MatrixXf refPos(Eigen::MatrixXf eta_in, Eigen::MatrixXf C){
   Eigen::MatrixXf S = scaleMat(eta_in);
   Eigen::MatrixXf t = transVec(eta_in);
   Eigen::Matrix <float, 3, 1> p;
-  p << R*S*C + t, 1.5;
+  p << R*S*C + t, 1.3;
   return p;
 }
 
@@ -570,7 +570,7 @@ int main(int argc, char **argv)
   */
 
   // Initialize eta
-  eta << 0, 10, 10, 0, 0;
+  eta << 0, 10, 10, -45.0, 10.0;
   for(int i=0; i<N; i++){
     eta_N[i] = eta;
   }
