@@ -96,11 +96,11 @@ bool activationServiceCallback(std_srvs::Trigger::Request& req, std_srvs::Trigge
 // Subscriber callback for getting joypad values
 void joyCallback(const std_msgs::Int32MultiArray::ConstPtr& msg)
 {
-  deta_joy << 2*(float(msg->data[4])/32767.0 - float(msg->data[5])/32767.0),
-              8*float(msg->data[0])/32767.0,
-              -8*float(msg->data[1])/32767.0,
-              10*float(msg->data[2])/32767.0,
-              -10*float(msg->data[3])/32767.0;
+  deta_joy << 0.2*(float(msg->data[4])/32767.0 - float(msg->data[5])/32767.0),
+              0.8*float(msg->data[0])/32767.0,
+              -0.8*float(msg->data[1])/32767.0,
+              1.0*float(msg->data[2])/32767.0,
+              -1.0*float(msg->data[3])/32767.0;
 }
 
 // Subscriber callback for getting formation shape
@@ -295,50 +295,26 @@ Eigen::MatrixXf refVel(Eigen::MatrixXf eta_in, Eigen::MatrixXf deta_in, Eigen::M
 Eigen::Matrix<float, 2, 1> repPot(Eigen::MatrixXf p_in){
   Eigen::Matrix<float, 2, 1> v_rep;
   v_rep.setZero();
-  for(int i=0; i<N_obst; i++){
-    float rho = (c_obst.col(i) - p_in.block(0,0,2,1)).norm() - r_obst(i,0) - clearance_obstacles;
-    Eigen::MatrixXf drho = (p_in.block(0,0,2,1) - c_obst.col(i))/((p_in.block(0,0,2,1) - c_obst.col(i)).norm());
-    float df;
-    if(rho >= rho_act){
-      df = 0.0;
-    }
-    else{
-      df = pot_strength*(1/rho - 1/rho_act)*1/(rho*rho);
-    }
-    v_rep = v_rep + df*drho;
-  }
-  return v_rep;
-}
-
-/*
-Eigen::Matrix<float, 2, 1> losPot(Eigen::MatrixXf p_i, Eigen::MatrixXf p_j){
-
-  Eigen::Matrix<float, 2, 2> R90;
-  R90 << 0, 1,
-         -1, 0;
-
-  float d_act = 20.0;
-  Eigen::Matrix <float, 2, 1> v_rep;
-  v_rep.setZero();
-
-  for(int i=0; i<2; i++){
-    Eigen::MatrixXf a = R90*(p_j - p_i)/((p_j - p_i).norm());
-    Eigen::MatrixXf b = a.transpose()*p_i;
-    float d = (a.transpose()*c_obst.col(i) - b).value() - r_obst(i,0) - clearance;
-    Eigen::MatrixXf p_obst_proj = c_obst.col(i) - (a.transpose()*c_obst.col(i) - b)*a;
-    float w = (p_j - p_obst_proj).norm()/((p_j - p_i).norm());
-    cout << "*************" << endl;
-    cout << i << endl;
-    cout << d << endl;
-    cout << w << endl;
-    if(w > 0 & w < 1){
-      v_rep = v_rep - eta*(1/d - 1/d_act)*1/(d*d)*a;
+  float rho = (c_obst.col(0) - p_in.block(0,0,2,1)).norm() - r_obst(0,0) - clearance_obstacles;
+  Eigen::MatrixXf drho = (p_in.block(0,0,2,1) - c_obst.col(0))/((p_in.block(0,0,2,1) - c_obst.col(0)).norm());
+  for(int i=1; i<N_obst; i++){
+    float rho_i = (c_obst.col(i) - p_in.block(0,0,2,1)).norm() - r_obst(i,0) - clearance_obstacles;
+    if(rho_i < rho){
+      rho = rho_i;
+      drho = (p_in.block(0,0,2,1) - c_obst.col(i))/((p_in.block(0,0,2,1) - c_obst.col(i)).norm());
     }
   }
+  float df;
+  if(rho >= rho_act){
+    df = 0.0;
+  }
+  else{
+    df = pot_strength*(1/rho - 1/rho_act)*1/(rho*rho);
+  }
+  v_rep = v_rep + df*drho;
 
   return v_rep;
 }
-*/
 
 // Function for mapping from velocity to parameter derivative
 Eigen::MatrixXf v2deta(Eigen::MatrixXf v, Eigen::MatrixXf eta_in, Eigen::MatrixXf C){
@@ -570,7 +546,7 @@ int main(int argc, char **argv)
   */
 
   // Initialize eta
-  eta << 0, 10, 10, -45.0, 10.0;
+  eta << 0, 10, 10, 0, 0;
   for(int i=0; i<N; i++){
     eta_N[i] = eta;
   }
@@ -621,7 +597,7 @@ int main(int argc, char **argv)
   }
   uint32_t shape = visualization_msgs::Marker::CYLINDER; // Set shape of marker
   visualization_msgs::Marker marker;
-  marker.header.frame_id = UAV_names[0] + "/" + _control_frame_;
+  marker.header.frame_id = "simulator_origin"; //UAV_names[0] + "/" + _control_frame_;
   marker.header.stamp = ros::Time::now();
   marker.ns = "obstacle";
   marker.id = 0;
@@ -663,21 +639,6 @@ int main(int argc, char **argv)
         change_formation_shape = false;
       }
 
-      /*
-      // Generate soft scaling constraint
-      Eigen::Matrix <float, 3, 2> A_soft;
-      Eigen::Matrix <float, 3, 1> b_soft;
-      int iter = 0;
-      for(int i=0; i<4; i++){
-        if(i != (uavNum-1)){
-          auto const_ij = genConst(eta.block(1,0,2,1), Sigma[i].block(0,0,2,2), Sigma[uavNum-1].block(0,0,2,2), C[i], C[uavNum-1], m_soft, Br);
-          A_soft.row(iter) << get<0>(const_ij).transpose();
-          b_soft(iter,0) = get<1>(const_ij);
-          iter += 1;
-        }
-      }
-      */
-
       // Generate hard scaling constraint
       Eigen::Matrix <float, 3, 2> A_hard;
       Eigen::Matrix <float, 3, 1> b_hard;
@@ -703,15 +664,6 @@ int main(int argc, char **argv)
         }
       }
 
-      /*
-      // Perform soft projection step
-      MatrixXf s_proj_soft = projScale(eta.block(1,0,2,1), A_soft, b_soft);
-      MatrixXf deta_soft = Eigen::MatrixXf::Zero(5,1);
-      if((!isnan(s_proj_soft.array())).all()){
-        deta_soft.block(1,0,2,1) = 0.2*(s_proj_soft - eta.block(1,0,2,1));
-      }
-      */
-
       // Calculate parameter derivative
       deta = deta_joy + deta_N + deta_rep; // + deta_soft;
 
@@ -732,18 +684,11 @@ int main(int argc, char **argv)
       Eigen::MatrixXf pr = refPos(eta,C[uavNum-1]);
 
       mrs_msgs::ReferenceStamped pos_msg;
-      pos_msg.header.frame_id = _control_frame_;
+      pos_msg.header.frame_id = UAV_names[uavNum-1] + "/" + _control_frame_;
       pos_msg.reference.position.x = pr(0,0);
       pos_msg.reference.position.y = pr(1,0);
       pos_msg.reference.position.z = pr(2,0);
       pos_ref_pub.publish(pos_msg);
-
-      // Publish velocity reference
-      //mrs_msgs::VelocityReferenceStamped vel_msg;
-      //vel_msg.reference.velocity.x = vr(0,0); 
-      //vel_msg.reference.velocity.y = vr(1,0);
-      //vel_msg.reference.velocity.z = vr(2,0);
-      //vel_ref_pub.publish(vel_msg);
       
       // Publish eta
       std_msgs::Float32MultiArray eta_msg;
