@@ -668,10 +668,10 @@ int main(int argc, char **argv)
       // Calculate parameter derivative
       deta = deta_joy + deta_N + deta_rep; // + deta_soft;
 
-      //MatrixXf s_proj_hard = projScale(eta.block(1,0,2,1)+deta.block(1,0,2,1), A_hard, b_hard);
-      //if((!isnan(s_proj_hard.array())).all()){
-      //  deta.block(1,0,2,1) = s_proj_hard - eta.block(1,0,2,1);
-      //}
+      MatrixXf s_proj_hard = projScale(eta.block(1,0,2,1)+deta.block(1,0,2,1), A_hard, b_hard);
+      if((!isnan(s_proj_hard.array())).all()){
+        deta.block(1,0,2,1) = s_proj_hard - eta.block(1,0,2,1);
+      }
 
       // Scale parameter derivative down to ensure that drones don't fly too fast
       Eigen::MatrixXf vr = refVel(eta,deta,C[uavNum-1]);
@@ -683,10 +683,10 @@ int main(int argc, char **argv)
       eta = eta + ts*deta;
 
       // Moved projection step to after parameter update
-      MatrixXf s_proj_hard = projScale(eta.block(1,0,2,1), A_hard, b_hard);
-      if((!isnan(s_proj_hard.array())).all()){
-        eta.block(1,0,2,1) = s_proj_hard;
-      }
+      //MatrixXf s_proj_hard = projScale(eta.block(1,0,2,1), A_hard, b_hard);
+      //if((!isnan(s_proj_hard.array())).all()){
+      //  eta.block(1,0,2,1) = s_proj_hard;
+      //}
       
       Eigen::MatrixXf pr = refPos(eta,C[uavNum-1]);
 
