@@ -25,38 +25,38 @@ windows:
   - status:
       layout: tiled
       panes:
-        - waitForHw; export UAV_NAME=uav1; roslaunch mrs_uav_status status.launch
         - waitForHw; export UAV_NAME=uav3; roslaunch mrs_uav_status status.launch
         - waitForHw; export UAV_NAME=uav7; roslaunch mrs_uav_status status.launch
         - waitForHw; export UAV_NAME=uav8; roslaunch mrs_uav_status status.launch
+        - waitForHw; export UAV_NAME=uav13; roslaunch mrs_uav_status status.launch
   - hw_api:
       layout: tiled
       panes:
-        - waitForTime; export UAV_NAME=uav1; roslaunch mrs_multirotor_simulator hw_api.launch custom_config:=./config/hw_api.yaml nodelet_manager_name:=$UAV_NAME\_nodelet_manager
         - waitForTime; export UAV_NAME=uav3; roslaunch mrs_multirotor_simulator hw_api.launch custom_config:=./config/hw_api.yaml nodelet_manager_name:=$UAV_NAME\_nodelet_manager
         - waitForTime; export UAV_NAME=uav7; roslaunch mrs_multirotor_simulator hw_api.launch custom_config:=./config/hw_api.yaml nodelet_manager_name:=$UAV_NAME\_nodelet_manager
         - waitForTime; export UAV_NAME=uav8; roslaunch mrs_multirotor_simulator hw_api.launch custom_config:=./config/hw_api.yaml nodelet_manager_name:=$UAV_NAME\_nodelet_manager
+        - waitForTime; export UAV_NAME=uav13; roslaunch mrs_multirotor_simulator hw_api.launch custom_config:=./config/hw_api.yaml nodelet_manager_name:=$UAV_NAME\_nodelet_manager
   - control:
       layout: tiled
       panes:
-        - export UAV_NAME=uav1; waitForTime; roslaunch mrs_uav_core core.launch
         - export UAV_NAME=uav3; waitForTime; roslaunch mrs_uav_core core.launch
         - export UAV_NAME=uav7; waitForTime; roslaunch mrs_uav_core core.launch
         - export UAV_NAME=uav8; waitForTime; roslaunch mrs_uav_core core.launch
+        - export UAV_NAME=uav13; waitForTime; roslaunch mrs_uav_core core.launch
   - automatic_start:
       layout: tiled
       panes:
-        - export UAV_NAME=uav1; waitForTime; roslaunch mrs_uav_autostart automatic_start.launch custom_config:=./config/automatic_start.yaml
         - export UAV_NAME=uav3; waitForTime; roslaunch mrs_uav_autostart automatic_start.launch custom_config:=./config/automatic_start.yaml
         - export UAV_NAME=uav7; waitForTime; roslaunch mrs_uav_autostart automatic_start.launch custom_config:=./config/automatic_start.yaml
         - export UAV_NAME=uav8; waitForTime; roslaunch mrs_uav_autostart automatic_start.launch custom_config:=./config/automatic_start.yaml
+        - export UAV_NAME=uav13; waitForTime; roslaunch mrs_uav_autostart automatic_start.launch custom_config:=./config/automatic_start.yaml
   - takeoff:
       layout: tiled
       panes:
-        - export UAV_NAME=uav1; waitForControl; rosservice call /$UAV_NAME/hw_api/arming 1; sleep 2; rosservice call /$UAV_NAME/hw_api/offboard; exit
         - export UAV_NAME=uav3; waitForControl; rosservice call /$UAV_NAME/hw_api/arming 1; sleep 2; rosservice call /$UAV_NAME/hw_api/offboard; exit
         - export UAV_NAME=uav7; waitForControl; rosservice call /$UAV_NAME/hw_api/arming 1; sleep 2; rosservice call /$UAV_NAME/hw_api/offboard; exit
         - export UAV_NAME=uav8; waitForControl; rosservice call /$UAV_NAME/hw_api/arming 1; sleep 2; rosservice call /$UAV_NAME/hw_api/offboard; exit
+        - export UAV_NAME=uav13; waitForControl; rosservice call /$UAV_NAME/hw_api/arming 1; sleep 2; rosservice call /$UAV_NAME/hw_api/offboard; exit
   - rviz:
       layout: tiled
       panes:
@@ -72,22 +72,22 @@ windows:
       layout: tiled
       panes:
         #- waitForRos; rosparam set N 4
-        - export UAV_NAME=uav1; waitForRos; roslaunch consensus consensus.launch parameter_file:=parameters_4_drones
         - export UAV_NAME=uav3; waitForRos; roslaunch consensus consensus.launch parameter_file:=parameters_4_drones
         - export UAV_NAME=uav7; waitForRos; roslaunch consensus consensus.launch parameter_file:=parameters_4_drones
         - export UAV_NAME=uav8; waitForRos; roslaunch consensus consensus.launch parameter_file:=parameters_4_drones
+        - export UAV_NAME=uav13; waitForRos; roslaunch consensus consensus.launch parameter_file:=parameters_4_drones
   - activate:
       layout: tiled
       panes:
-        - waitForTakeoff; rosservice call /uav1/activate
         - waitForTakeoff; rosservice call /uav3/activate
         - waitForTakeoff; rosservice call /uav7/activate
         - waitForTakeoff; rosservice call /uav8/activate
+        - waitForTakeoff; rosservice call /uav13/activate
   - tf_connector:
       layout: tiled
       panes:
         - waitForTime; roslaunch mrs_tf_connector tf_connector.launch custom_config:=./config/tf_connector.yaml
-  #- recording:
-  #    layout: tiled
-  #    panes:
-  #      - waitForTakeoff; cd bagfiles; rosbag record -a
+  - recording:
+      layout: tiled
+      panes:
+        - waitForTakeoff; cd bagfiles; rosbag record -a
